@@ -38,12 +38,12 @@ Jeśli starczy czasu, chęci i życia to:
 ## Wnioski
 Projekt sam w sobie jest stosunkowo prosty, lecz przy obecnej cyfryzacji, umiejętności związane z samodzielnym zarządzaniem ruchem w sieci jest wręcz niezbędna dla każdego "informatyka"
 
-## Pomysły dzieci
+## Zrodzone Pomysły W trakcje realizacji tego projektu
 - [ ] Skaner otwartych portów na zadanym adresie IP ( są różne skanowania) najprościej byłoby patrzeć na odpowiedź jaką zwraca server.
 
 - [ ] Stworzenie oraz rozwój własnych serverów w grach typu Minecraft
 
 ### mniej legalne
-- [ ] Aplikacja / Strona "wymuszająca" połączenie na server (np jakaś wyskakująca reklama) w celu "uzyskania" danych o użytkowniku typu adres IP, marka urządzenia, inne dane.
+- [ ] Aplikacja / Strona "wymuszająca" połączenie na server (np jakaś wyskakująca reklama) w celu "uzyskania" danych o użytkowniku typu adres IP, marka urządzenia, inne dane. (choć i tak użytkownik musi wykonać ruch, np klikając w reklamę)
 - [ ] Backdor / Zdalny dostęp - komputery zoombie, keyloggery - wysyłanie na zadany server tego co się dzieje na "kliencie" (zainfekowanym)
 - [ ] Program (razem z jakimś skryptem bashowym)szukający w plikach jakiejś kombinacji typu login: / hasło: / adresów email (zawierające @) numerów telefonów, numery kont bankowych, plików excel etc, i wysyłanie ich zawartości / modyfikowanie na zadane wartości. 
