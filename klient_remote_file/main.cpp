@@ -19,9 +19,9 @@ string przychodzace(SOCKET socket){
 }
 
 int wychodzace(SOCKET socket, string message){
-    cout << "wiadomosc to: " << message << endl;
+    cout << "wiadomosc to: #" << message << "#" << endl;
     int send_bits; // ilość wysłanych bitów
-    send_bits = send(socket, message.c_str(), message.length(), 0);
+    send_bits = send(socket, message.c_str(), message.length()+1, 0);
     return send_bits;
 }
 
@@ -30,10 +30,8 @@ int main() {
     string IP_serv = "192.168.56.1";
     int Port = 9021;
 
-    int status, w;
     SOCKET gniazdo1;
     struct sockaddr_in ser;
-    char buf[1024], nazwa_pliku[1024];
 
     WSADATA wsaData;
     if (WSAStartup( MAKEWORD( 2, 0 ), &wsaData )){printf("blad WSDATA\n"); return 0;}
@@ -59,28 +57,29 @@ int main() {
         int status;
         string haslo, login, message, hash_haslo;
 
-        message = przychodzace(gniazdo1); // dostajemy stringa z wiadomością
+        // można jako jedną rzecz zrobić
+        message = przychodzace(gniazdo1);
+        cout << "#" << message << "#";
+        if (message == ""){cout << "error po stornie servera"; break;}
+        cin >> login;
+        status = wychodzace(gniazdo1, login); // wysyłamy login
+        if(!status) { cout << "send error"; break; }
+        message = przychodzace(gniazdo1);
         cout << message;
         if (message == ""){cout << "error po stornie servera"; break;}
-
-        cout << endl << "Login: ";
-        cin >> login;
-
-        cout << "Password: ";
         cin >> haslo;
 
-        hash_haslo = haslo;
-        // hash_haslo = hash_string(haslo)
-        message = login + hash_haslo;
+        // tutaj dorobić hashowanie hasła
 
-        status = wychodzace(gniazdo1, message); // wysyłamy login;haslo;
+        status = wychodzace(gniazdo1, haslo); // wysyłamy haslo
         if(!status) { cout << "send error"; break; }
+
 
         message = przychodzace(gniazdo1); // server wysyła OK - zalogowano, ilość pozostałych prób.
         // gdy będzie równe 0, np blokuje adres ip i dodaje adres do listy (wiadomo, że można to obejść zmieniając
         // adres ip, ale to tylko projekt przykładowy) tu aż się roi od dziur w bezpieczeństwie
         if (message != "OK"){
-            cout << "Bledne login lub haslo!\n pozostało prob:" << message <<endl;
+            cout << "Bledne login lub haslo!\nPozostalo prob:" << message <<endl;
             // ew tu dopisać wysłanie jakiejś wiadomości, aby nie było błędu żadego
             continue;
         }

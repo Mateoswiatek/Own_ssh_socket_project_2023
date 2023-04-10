@@ -11,7 +11,7 @@ using json = nlohmann::json;
 using namespace std;
 
 
-// #pragma comment(lib,"ws2_32.lib")
+#pragma comment(lib,"ws2_32.lib")
 // definiujemy sobie parametry
 // #define IP_SERV "192.168.56.1"
 // #define Port_SERV 9000
@@ -26,7 +26,7 @@ string przychodzace(SOCKET socket){
 
 int wychodzace(SOCKET socket, string message){
     int send_bits; // ilość wysłanych bitów
-    send_bits = send(socket, message.c_str(), message.length(), 0);
+    send_bits = send(socket, message.c_str(), message.length()+1, 0);
     return send_bits;
 }
 
@@ -85,26 +85,23 @@ int main() {
         while(1){ //obsługa połączenia przychodzącego, nasz socket to gniazdo1
 
             while(!status) {
-                message = "Witaj!\n podaj login oraz haslo:";
+                message = "Witaj podaj login";
                 status = wychodzace(gniazdo1, message);
             }
+            status=0;
 
-            message = przychodzace(gniazdo1);
-            cout << "to co przyszlo to\n" << message << endl;
-            if (message == "Error"){break;}
+            login = przychodzace(gniazdo1);
+            cout << "login to #" << login << "#" << endl;
 
-           /* int pos=message.find(';') ;
-            login = message.substr(0, pos);
-            hash_password = message.substr(pos+1);
-            */
+            while(!status) {
+            message = "podaj haslo";
+            status = wychodzace(gniazdo1, message);
+            }
+            hash_password = przychodzace(gniazdo1);
+            cout << "hash_password to #" << hash_password << "#" << endl;
 
-            /*
-             * funkcja porównująca hash
-             */
-            login = message;
-            hash_password = message;
+            // tu sprawdzamy czy dane są poprawne
 
-            cout <<" login, password:" << login << hash_password << endl;
 
             status = wychodzace(gniazdo1, "OK");
             if(!status) { cout << "send error"; break; }
@@ -112,10 +109,9 @@ int main() {
             /*
              *  Po logowaniu
              */
-            WSACleanup();
             break;
         }
-        WSACleanup();
+        closesocket(gniazdo1);
     }
 
 
