@@ -98,6 +98,12 @@ int main() {
             if(mes_to_send[0] == '0') break;
             else continue;
         }
+        else if(message[0] == '3'){ // zalogowaliśmy się, wiadomosc o tym juz dostalismy
+            cout << "Brawo, zalogowales sie" << endl;
+            cout << "#" << message.substr(1) << "#"; // obetnie pierwszy znak (zacznie od message[1] wyśiwetlać) bo mesage[0] jest do sterowania.
+
+            wychodzace(gniazdo1, "1");
+        }
 
         /*
          *  część po zalogowaniu jakieś menu, opcje do wyboru, każdy wybór wysyła inną waidomość i inaczej działa z tym co przyjdzie.

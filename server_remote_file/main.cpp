@@ -72,11 +72,13 @@ int main() {
  */
 map < string, string >users; // slownik z uzytkownikami
 users["admin"] = "password"; // dodajemy uzytkownikow, kiedys mozna zrobic czytanie z pliku
-int count_try = 3; // ilosc prob logowania później można przerobić, iż każdy użytownik ma oddzielny licznik, też w pliku np.
+int count_try = 3, hack=0; // ilosc prob logowania później można przerobić, iż każdy użytownik ma oddzielny licznik, też w pliku np.
 
     while(1){ // postawienie servera, teraz już cały czas działa i czeka na połączenie
         string message, login, mes_to_send, hash_password;
-        int status=0;
+        if (hack) break; // zamiast tego, można zrobić listę np adresów IP które są już wykluczone, i fizycznie na kompie trzeba je usunąć z tej listy
+        // choć to i tak kiepsko, bo można sobie zmienić adres IP typu vpn, więc i tak to nie jest idealne zabezpieczenie
+
         int dlugosc=sizeof(client); // !!!! ważne fest XD
 
         cout << "Oczekiwanie na polaczenie..." << endl;
@@ -85,7 +87,7 @@ int count_try = 3; // ilosc prob logowania później można przerobić, iż każ
 
         else cout <<"zaakceptowano\n" << endl;
         while(1){ //obsługa połączenia przychodzącego, nasz socket to gniazdo1
-            status=0;
+            int status=0;
             while(!status) {
                 message = "Witaj podaj login";
                 status = wychodzace(gniazdo1, message);
@@ -113,16 +115,39 @@ int count_try = 3; // ilosc prob logowania później można przerobić, iż każ
                 else continue;
             }
             else{
-                if(para->second != hash_password) { // jeśli hash haseł jest różny
-                    mes_to_send = "2"+to_string(count_try);
-                    cout << "mes to send: " << mes_to_send;
-                    status = wychodzace(gniazdo1, mes_to_send);
+                if(para->second != hash_password) { // jeśli hash haseł jest różny 2
+                    // mes_to_send = "2"+to_string(count_try);
+                    status = wychodzace(gniazdo1, "2"+to_string(count_try));
                     count_try--; // zmniejszamy ilość prob
                     if(!status) { cout << "send error"; break; }
                     message = przychodzace(gniazdo1);
                     cout << message[0];
+                    if(count_try == 0){
+                        status = wychodzace(gniazdo1, "nie mozesz juz probowac. skontaktuj sie z adminem");
+                        if(!status) { cout << "send error"; break; }
+                        hack = 1;
+                        break;
+                    }
                     if( message[0] == '0') break;
                     else continue;
+                }else{ // tu się już zalogowaliśmy poprawnie wysyłamy 3
+
+                    string dostepne_funkcje = """Podaj numer funkcji:\n"
+                                                "1. Mozesz kupic bulki\n"
+                                                "2. Wyjsc na spacer\n"
+                                                "3. Spoktac sie z dziewczyna\n"
+                                                "   sorki, no tak, informatycy nie posiadaja kobiet\n"
+                                                "4. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
+                    mes_to_send = "3" + dostepne_funkcje;
+                    status = wychodzace(gniazdo1, mes_to_send);
+                    cout << "wyslalismy cos" << mes_to_send;
+
+                    if(!status) { cout << "send error"; break; }
+                    while(1){
+                        cout << "normalny program" << endl;
+                        break;
+                    }
+
                 }
             }
 
