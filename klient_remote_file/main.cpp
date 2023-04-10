@@ -10,29 +10,91 @@ using namespace std;
 // #define IP_SERV "192.168.56.1"
 // #define Port_SERV 9000
 
-void init_socket(const string IP, int Port){
-    sockaddr_in service;
-    memset( & service, 0, sizeof( service ) ); 
-    service.sin_family = AF_INET;
-    service.sin_addr.s_addr = inet_addr( "192.168.56.1" );
-    service.sin_port = htons( Port );
+string przychodzace(SOCKET socket){
+    int recv_bits;
+    char recv_frame[1024]; // musimy gdzieś zapisywać to co przychodzi
+    recv_bits = recv( socket, recv_frame, 1024, 0 );
+    if( recv_bits == 0 || recv_bits == WSAECONNRESET ) { strcpy(recv_frame,"Connection closed / Error" ) ; } // jeśli nie otrzymaliśmy odpowiedzi
+    return recv_frame;
+}
+
+int wychodzace(SOCKET socket, string message){
+    cout << "wiadomosc to: " << message << endl;
+    int send_bits; // ilość wysłanych bitów
+    send_bits = send(socket, message.c_str(), message.length(), 0);
+    return send_bits;
 }
 
 int main() {
+
     string IP_serv = "192.168.56.1";
-    int Port = 9000;
+    int Port = 9021;
+
+    int status, w;
+    SOCKET gniazdo1;
+    struct sockaddr_in ser;
+    char buf[1024], nazwa_pliku[1024];
 
     WSADATA wsaData;
-    int result = WSAStartup( MAKEWORD(2,2), &wsaData);
-    if(result != NO_ERROR) printf( "Initialization error.\n" );
+    if (WSAStartup( MAKEWORD( 2, 0 ), &wsaData )){printf("blad WSDATA\n"); return 0;}
 
-    SOCKET mainSocket = socket( AF_INET, SOCK_STREAM, 0 );
-    if( mainSocket == -1 ){
-        printf( "Error creating socket: %d\n", WSAGetLastError() );
-        WSACleanup(); // "sprzątanie" po WSA
+    gniazdo1 = socket( AF_INET, SOCK_STREAM, 0 );
+    if( gniazdo1 == SOCKET_ERROR ){ // jeśli jest jakiś błąd
+        cout << "Initialization error.\n Error creating socket: %d\n" << WSAGetLastError() << endl;
+        WSACleanup();
         return 0;
     }
-    init_socket(IP_serv, Port);
+
+    memset( & ser, 0, sizeof( ser ) ); // pamięć na 0, są domyślne wartości w polach struktury
+    ser.sin_family = AF_INET; // używamy protokołu IPv4
+    ser.sin_addr.s_addr = inet_addr( "192.168.56.1" );
+    ser.sin_port = htons( Port );
+
+    // ============== Część Klienta =======================
+
+    // łączenie się z serverem
+    if ( connect(gniazdo1, (struct sockaddr *) &ser, sizeof(ser)) == SOCKET_ERROR) { cout << "error connect" << endl; WSACleanup(); return 0; }
+
+    while(1){
+        int status;
+        string haslo, login, message, hash_haslo;
+
+        message = przychodzace(gniazdo1); // dostajemy stringa z wiadomością
+        cout << message;
+        if (message == ""){cout << "error po stornie servera"; break;}
+
+        cout << endl << "Login: ";
+        cin >> login;
+
+        cout << "Password: ";
+        cin >> haslo;
+
+        hash_haslo = haslo;
+        // hash_haslo = hash_string(haslo)
+        message = login + hash_haslo;
+
+        status = wychodzace(gniazdo1, message); // wysyłamy login;haslo;
+        if(!status) { cout << "send error"; break; }
+
+        message = przychodzace(gniazdo1); // server wysyła OK - zalogowano, ilość pozostałych prób.
+        // gdy będzie równe 0, np blokuje adres ip i dodaje adres do listy (wiadomo, że można to obejść zmieniając
+        // adres ip, ale to tylko projekt przykładowy) tu aż się roi od dziur w bezpieczeństwie
+        if (message != "OK"){
+            cout << "Bledne login lub haslo!\n pozostało prob:" << message <<endl;
+            // ew tu dopisać wysłanie jakiejś wiadomości, aby nie było błędu żadego
+            continue;
+        }
+        /*
+         *  część po zalogowaniu jakieś menu, opcje do wyboru, każdy wybór wysyła inną waidomość i inaczej działa z tym co przyjdzie.
+         *  np może być wysłanie pliku, to w tedy wybieramy plik i dalej wysyła się jego zawartość... etc
+         *  możemy wyświetlić pliki, to w tedy leci odpowiednia komenda, i zwraca listę elementów, np dwójkami, nazwa,rozmiar
+         *  a tu na kliencie będzie to przedstawiane w postaci listy / później w postaci kafelek, albo wgl, obiektów wektor obiektów,
+         *  gdzie każdy będzie miał tą swoją nazwę i rozmiar. i później te kafelki się będą wyświetlać.
+         */
+
+
+        break;
+    }
     
 
     std::cout << "Hello, World!" << std::endl;

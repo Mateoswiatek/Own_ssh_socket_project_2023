@@ -2,6 +2,12 @@
 #include <string>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+
+/* może jsona się jeszcze dowali do tego
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+ */
+
 using namespace std;
 
 
@@ -10,14 +16,26 @@ using namespace std;
 // #define IP_SERV "192.168.56.1"
 // #define Port_SERV 9000
 
+string przychodzace(SOCKET socket){
+    int recv_bits;
+    char recv_frame[1024]; // musimy gdzieś zapisywać to co przychodzi
+    recv_bits = recv( socket, recv_frame, 1024, 0 );
+    if( recv_bits == 0 || recv_bits == WSAECONNRESET ) { strcpy(recv_frame,"Connection closed / Error" ) ; } // jeśli nie otrzymaliśmy odpowiedzi
+    return recv_frame;
+}
+
+int wychodzace(SOCKET socket, string message){
+    int send_bits; // ilość wysłanych bitów
+    send_bits = send(socket, message.c_str(), message.length(), 0);
+    return send_bits;
+}
+
 int main() {
     string IP_serv = "192.168.56.1";
-    int Port = 9000;
+    int Port = 9021;
 
     SOCKET gniazdo_root, gniazdo1;
-    int status, dlugosc;
     struct sockaddr_in server, client; // instancje struktury które przechowują dane
-    char buf[1024];
 
     WSADATA wsaData;
     int result = WSAStartup( MAKEWORD(2,2), &wsaData); // używamy wersji 2.2
@@ -37,9 +55,9 @@ int main() {
 
     // ================ program dla Servera =================================
 
-    if( bind( gniazdo_root,( SOCKADDR * ) &server, sizeof( server ) ) == SOCKET_ERROR )  // przypisanie adresu(gniazdo ma ten adres) , https://man7.org/linux/man-pages/man2/bind.2.html
+    if( bind( gniazdo_root,( sockaddr * ) &server, sizeof( server ) ) == SOCKET_ERROR )  // przypisanie adresu(gniazdo ma ten adres) , https://man7.org/linux/man-pages/man2/bind.2.html
     {
-        cout << "bind() failed." << WSAGetLastError() << endl;
+        cout << "bind() failed. " << WSAGetLastError() << endl;
         closesocket( gniazdo_root );
         return 0;
     }
@@ -48,14 +66,56 @@ int main() {
         cout << "Error listening" << endl ;
 
 
+/*
+ *      Miejsce na różne dane do działania i wgl na zmienne etc
+ */
+
+
+
     while(1){ // postawienie servera, teraz już cały czas działa i czeka na połączenie
+        string message, login, hash_password;
+        int status=0;
+        int dlugosc=sizeof(client); // !!!! ważne fest XD
+
         cout << "Oczekiwanie na polaczenie..." << endl;
-        gniazdo1 = accept(gniazdo_root, (struct sockaddr *) &client, &dlugosc);
-        if (gniazdo1 == -1) {cout << "blad accept\n" << endl; return 0;}
+        gniazdo1 = accept(gniazdo_root, (struct sockaddr *) &client, &dlugosc); // gniazdo1 teraz odpowiada za połączenie
+        if (gniazdo1 == -1) { WSACleanup(); cout << "blad accept\n" << endl; return 0;}
+
         else cout <<"zaakceptowano\n" << endl;
-        while(1){ //obsługa połączenia przychodzącego
+        while(1){ //obsługa połączenia przychodzącego, nasz socket to gniazdo1
+
+            while(!status) {
+                message = "Witaj!\n podaj login oraz haslo:";
+                status = wychodzace(gniazdo1, message);
+            }
+
+            message = przychodzace(gniazdo1);
+            cout << "to co przyszlo to\n" << message << endl;
+            if (message == "Error"){break;}
+
+           /* int pos=message.find(';') ;
+            login = message.substr(0, pos);
+            hash_password = message.substr(pos+1);
+            */
+
+            /*
+             * funkcja porównująca hash
+             */
+            login = message;
+            hash_password = message;
+
+            cout <<" login, password:" << login << hash_password << endl;
+
+            status = wychodzace(gniazdo1, "OK");
+            if(!status) { cout << "send error"; break; }
+
+            /*
+             *  Po logowaniu
+             */
+            WSACleanup();
             break;
         }
+        WSACleanup();
     }
 
 
