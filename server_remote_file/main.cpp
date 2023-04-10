@@ -2,6 +2,7 @@
 #include <string>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <map> // słowniki
 
 /* może jsona się jeszcze dowali do tego
 #include <nlohmann/json.hpp>
@@ -69,11 +70,12 @@ int main() {
 /*
  *      Miejsce na różne dane do działania i wgl na zmienne etc
  */
-
-
+map < string, string >users; // slownik z uzytkownikami
+users["admin"] = "password"; // dodajemy uzytkownikow, kiedys mozna zrobic czytanie z pliku
+int count_try = 3; // ilosc prob logowania później można przerobić, iż każdy użytownik ma oddzielny licznik, też w pliku np.
 
     while(1){ // postawienie servera, teraz już cały czas działa i czeka na połączenie
-        string message, login, hash_password;
+        string message, login, mes_to_send, hash_password;
         int status=0;
         int dlugosc=sizeof(client); // !!!! ważne fest XD
 
@@ -83,16 +85,16 @@ int main() {
 
         else cout <<"zaakceptowano\n" << endl;
         while(1){ //obsługa połączenia przychodzącego, nasz socket to gniazdo1
-
+            status=0;
             while(!status) {
                 message = "Witaj podaj login";
                 status = wychodzace(gniazdo1, message);
             }
-            status=0;
 
             login = przychodzace(gniazdo1);
             cout << "login to #" << login << "#" << endl;
 
+            status=0;
             while(!status) {
             message = "podaj haslo";
             status = wychodzace(gniazdo1, message);
@@ -100,11 +102,29 @@ int main() {
             hash_password = przychodzace(gniazdo1);
             cout << "hash_password to #" << hash_password << "#" << endl;
 
-            // tu sprawdzamy czy dane są poprawne
+            auto para = users.find(login); // od C++11  https://cpp0x.pl/kursy/Kurs-C++/Poziom-5/Kontenery-asocjacyjne-std-set-i-std-map/589
 
-
-            status = wychodzace(gniazdo1, "OK");
-            if(!status) { cout << "send error"; break; }
+            if ( para == users.end() ) { // 1 - nie ma loginu, 2- bledne haslo, 3 - prezszlo
+                status = wychodzace(gniazdo1, "1");
+                if(!status) { cout << "send error"; break; }
+                message = przychodzace(gniazdo1);
+                cout << message[0];
+                if( message[0] == '0') break;
+                else continue;
+            }
+            else{
+                if(para->second != hash_password) { // jeśli hash haseł jest różny
+                    mes_to_send = "2"+to_string(count_try);
+                    cout << "mes to send: " << mes_to_send;
+                    status = wychodzace(gniazdo1, mes_to_send);
+                    count_try--; // zmniejszamy ilość prob
+                    if(!status) { cout << "send error"; break; }
+                    message = przychodzace(gniazdo1);
+                    cout << message[0];
+                    if( message[0] == '0') break;
+                    else continue;
+                }
+            }
 
             /*
              *  Po logowaniu

@@ -55,14 +55,14 @@ int main() {
 
     while(1){
         int status;
-        string haslo, login, message, hash_haslo;
+        string haslo, message, mes_to_send, hash_haslo;
 
         // można jako jedną rzecz zrobić
         message = przychodzace(gniazdo1);
         cout << "#" << message << "#";
         if (message == ""){cout << "error po stornie servera"; break;}
-        cin >> login;
-        status = wychodzace(gniazdo1, login); // wysyłamy login
+        cin >> mes_to_send;
+        status = wychodzace(gniazdo1, mes_to_send); // wysyłamy login
         if(!status) { cout << "send error"; break; }
         message = przychodzace(gniazdo1);
         cout << message;
@@ -78,11 +78,27 @@ int main() {
         message = przychodzace(gniazdo1); // server wysyła OK - zalogowano, ilość pozostałych prób.
         // gdy będzie równe 0, np blokuje adres ip i dodaje adres do listy (wiadomo, że można to obejść zmieniając
         // adres ip, ale to tylko projekt przykładowy) tu aż się roi od dziur w bezpieczeństwie
-        if (message != "OK"){
-            cout << "Bledne login lub haslo!\nPozostalo prob:" << message <<endl;
-            // ew tu dopisać wysłanie jakiejś wiadomości, aby nie było błędu żadego
-            continue;
+
+        // cashe switch przerobić
+        cout << "#" << message[0] << "# message[0]" << endl;
+
+        if(message[0] == '1'){
+            cout<< message << " czyli nie ma takiego loginu! chcesz sprobowac ponownie?";
+            cin >> mes_to_send;
+            status = wychodzace(gniazdo1, mes_to_send);
+            if(!status) { cout << "send error"; break; }
+            if(mes_to_send[0] == '0') break;
+            else continue;
         }
+        else if(message[0] == '2'){ // bledne haslo
+            cout << "Bledne login lub haslo!\nPozostalo prob: " << message[1] << endl << "chcesz sprobowac ponownie?"<<endl;
+            cin >> mes_to_send;
+            status = wychodzace(gniazdo1, mes_to_send);
+            if(!status) { cout << "send error"; break; }
+            if(mes_to_send[0] == '0') break;
+            else continue;
+        }
+
         /*
          *  część po zalogowaniu jakieś menu, opcje do wyboru, każdy wybór wysyła inną waidomość i inaczej działa z tym co przyjdzie.
          *  np może być wysłanie pliku, to w tedy wybieramy plik i dalej wysyła się jego zawartość... etc
