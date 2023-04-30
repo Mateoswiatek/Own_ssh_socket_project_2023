@@ -1,0 +1,13 @@
+2023.04.30 Funkcjonalności:
+	cała klasa user
+	hashowane hasła
+	switch cashe w kilku miejscach
+	wyswietlenie zawartosci katalogu
+	przejscie do danego folderu
+	dodawanie userow
+	różne funkcje dla roota / usera
+	banowanie gdy za dużo prób
+	blokowanie adresu IP
+
+pomysły:
+	Dodanie do pola user czasu od ostatniego logowania - odstęp czasu do kolejnej próby - jak na telefonach
