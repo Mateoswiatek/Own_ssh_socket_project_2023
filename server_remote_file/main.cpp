@@ -85,7 +85,6 @@ string wypisz_zawartosc(){
 
 
 
-
 int main() {
     // dodawanie admina
     User admin("admin", "admin", 1);
@@ -242,6 +241,8 @@ int main() {
                 bool error=0;
                 switch (wybor) {
                     case 1:
+                        cout << " pierwsza opcja" << endl;
+
                         message = wypisz_zawartosc();
                         cout << "\n\n\n\n" << message << endl;
                         status = wychodzace(client_socket, message);
@@ -249,9 +250,29 @@ int main() {
 
                         przychodzace(client_socket);
                         if( login == "-1"){cerr << "error przy odbieraniu danych"; break;}
-
                         break;
                     case 2:
+                        message = "podaj nazwe folderu";
+                        status = wychodzace(client_socket, message);
+                        if(!status) { cout << "send error"; error = 1; break; }
+
+                        cout << "przed otrzymaniem danych" << endl;
+                        string folder = przychodzace(client_socket);
+                        if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        cout << "tu jestem" << endl;
+
+                        cout << "folder to:" << folder << endl;
+
+                        filesystem::current_path("./" + folder);
+
+                        message = "jestes w: " + filesystem::current_path().string(); // wysyłamy ścieżkę
+                        status = wychodzace(client_socket, message);
+                        if(!status) { cout << "send error"; error = 1; break; }
+
+
+                        przychodzace(client_socket);
+                        if( login == "-1"){cerr << "error przy odbieraniu danych"; break;}
+
                         break;
 
                 }

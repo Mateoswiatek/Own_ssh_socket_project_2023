@@ -149,6 +149,19 @@ int main() {
                     if (!status) { cerr << "send error"; error=1;}
                     break;
                 case 2:
+                    message = przychodzace(gniazdo1);
+                    cout << message << "\n";
+
+                    cin >> mes_to_send;
+                    status = wychodzace(gniazdo1, mes_to_send);
+                    if (!status) { cerr << "send error"; error=1;}
+
+                    message = przychodzace(gniazdo1);
+                    cout << message << "\n";
+
+                    status = wychodzace(gniazdo1, "1");
+                    if (!status) { cerr << "send error"; error=1;}
+
                     break;
 
             }
