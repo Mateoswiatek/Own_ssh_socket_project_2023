@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <filesystem>
+#include <fstream>
 
 using namespace std;
 
@@ -226,10 +227,11 @@ int main() {
             while(1){ // gdy zalogowano:
                 string dostepne_funkcje = """Podaj numer funkcji:\n"
                                         "1. wyswietl zawartosc foldera\n"
-                                        "2. przejdz do folderu\n"
-                                        "3. pobierz plik\n"
-                                        "4. wyslij plik\n"
-                                        "5. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
+                                        "2. przejdz do folderu .. (nadrzedny)\n"
+                                        "3. stworz folder\n"
+                                        "4. pobierz plik\n"
+                                        "5. wyslij plik\n"
+                                        "6. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
                 status = wychodzace(client_socket, dostepne_funkcje);
                 if(!status) { cout << "send error"; break; }
 
@@ -237,6 +239,8 @@ int main() {
                 if( wybor== -1){cerr << "error przy odbieraniu danych"; break;}
 
                 cout << wybor;
+
+                string folder, nazwa_pliku;
 
                 bool error=0;
                 switch (wybor) {
@@ -248,20 +252,16 @@ int main() {
                         status = wychodzace(client_socket, message);
                         if(!status) { cout << "send error"; error = 1; break; }
 
-                        przychodzace(client_socket);
-                        if( login == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        message =przychodzace(client_socket);
+                        if( message == "-1"){cerr << "error przy odbieraniu danych"; break;}
                         break;
                     case 2:
                         message = "podaj nazwe folderu";
                         status = wychodzace(client_socket, message);
                         if(!status) { cout << "send error"; error = 1; break; }
 
-                        cout << "przed otrzymaniem danych" << endl;
-                        string folder = przychodzace(client_socket);
+                        folder = przychodzace(client_socket);
                         if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
-                        cout << "tu jestem" << endl;
-
-                        cout << "folder to:" << folder << endl;
 
                         filesystem::current_path("./" + folder);
 
@@ -269,11 +269,55 @@ int main() {
                         status = wychodzace(client_socket, message);
                         if(!status) { cout << "send error"; error = 1; break; }
 
-
-                        przychodzace(client_socket);
-                        if( login == "-1"){cerr << "error przy odbieraniu danych"; break;}
-
+                        message = przychodzace(client_socket);
+                        if( message == "-1"){cerr << "error przy odbieraniu danych"; break;}
                         break;
+
+                    case 3:
+                        message = "podaj nazwe folderu ktory chcesz utworzyc";
+                        status = wychodzace(client_socket, message);
+                        if(!status) { cout << "send error"; error = 1; break; }
+
+                        folder = przychodzace(client_socket);
+                        if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+
+                        filesystem::create_directory(folder);
+
+                        message = "utworzyles nowy folder w " + wypisz_zawartosc();
+                        status = wychodzace(client_socket, message);
+                        if(!status) { cout << "send error"; error = 1; break; }
+
+                        message = przychodzace(client_socket);
+                        if( message == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        break;
+                    case 5:
+                        break;
+
+                    case 4:
+                        message = "podaj nazwe pliku ktory chcesz pobrac";
+                        status = wychodzace(client_socket, message);
+                        if(!status) { cout << "send error"; error = 1; break; }
+
+                        nazwa_pliku = przychodzace(client_socket);
+                        if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+
+
+                        char bufor[1000];
+                        ifstream plik(nazwa_pliku);
+                        while (plik) {
+                            plik.read(bufor, 1000);
+                            streamsize bytes_read = plik.gcount(); // liczba odczytanych bajtow
+                            if (bytes_read > 0) {
+                                status = wychodzace(client_socket, bufor);
+                                if(!status) { cout << "send error"; error = 1; break; }
+                            }
+                            przychodzace(client_socket);
+                            if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        }
+                        status = wychodzace(client_socket, "END"); // gdy sie skonczyl plik
+                        przychodzace(client_socket);
+                        if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        plik.close();
 
                 }
                 if(error){ break;}

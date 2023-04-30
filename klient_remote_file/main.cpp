@@ -2,6 +2,8 @@
 #include <string>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <fstream>
+
 using namespace std;
 
 // #pragma comment(lib,"ws2_32.lib")
@@ -162,6 +164,47 @@ int main() {
                     status = wychodzace(gniazdo1, "1");
                     if (!status) { cerr << "send error"; error=1;}
 
+                    break;
+                case 3:
+                    message = przychodzace(gniazdo1); // ze musimy folder podac
+                    cout << message << "\n";
+
+                    cin >> mes_to_send;
+                    status = wychodzace(gniazdo1, mes_to_send); // wysylamy nazwe folderu
+                    if (!status) { cerr << "send error"; error=1;}
+
+                    message = przychodzace(gniazdo1); // info zwrotne czy sie udalo
+                    cout << message << "\n";
+
+                    status = wychodzace(gniazdo1, "1");
+                    if (!status) { cerr << "send error"; error=1;}
+                case 4:
+
+                    message = przychodzace(gniazdo1); // ze musimy nazwe pliku podac
+                    cout << message << "\n";
+
+                    cin >> mes_to_send;
+                    status = wychodzace(gniazdo1, mes_to_send); // wysylamy nazwe pliku
+                    if (!status) { cerr << "send error"; error=1;}
+                    ofstream file(mes_to_send);
+
+                    int x =0;
+                    while(1){ // dopoki sa jeszcze dane
+                        x++;
+                        message = przychodzace(gniazdo1); // ze musimy nazwe pliku podac
+
+                        if(strcmp(message.c_str(), "END") == 0){
+                            break;
+                        }
+
+                        file.write(message.c_str(), message.size());
+
+                        status = wychodzace(gniazdo1, "1"); // wysylamy nazwe pliku
+                        if (!status) { cerr << "send error"; error=1;}
+
+                    }
+                    file.close();
+                    cout << "wyszlismy" << endl;
                     break;
 
             }
