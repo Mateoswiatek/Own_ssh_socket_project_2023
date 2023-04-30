@@ -145,76 +145,51 @@ int main() {
             if(!status){break;}
 
             hash_password = przychodzace(client_socket);
-            if( login == "-1"){cerr << "error przy odbieraniu danych"; break;}
+            if( hash_password == "-1"){cerr << "error przy odbieraniu danych"; break;}
             cout << "hash_password to #" << hash_password << "#" << endl;
 
+            // do tad dziala
+
             User zalogowany_user;
-            bool zalogowano=0;
+            int czy_zalogowano=0; // czy zalogowanu
             for (auto& user : users) {
-                int stat;
+
                 if(user.getlogin() == login) { // aby przy wiekszej ilosci przyspieszyc
-                    stat = user.try_login(login, hash_password);
-                    status = wychodzace(client_socket, to_string(stat)); // wysylamy stan
-                    przychodzace(client_socket); // cokolwiek
-                    if(stat == 1) {
+                    czy_zalogowano = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
+                    status = wychodzace(client_socket, to_string(czy_zalogowano)); // wysylamy stan
+                    if(!status){czy_zalogowano = -2; break;}
+                    message = przychodzace(client_socket); // cokolwiek
+                    if( message[0] != '1'){czy_zalogowano = -2; break;}
+                    if(czy_zalogowano == 1) {
                         zalogowany_user=user;
-                        zalogowano=1;
                     }
                     break;
                 }
             }
-            if(zalogowano==0){ continue;}
+            if(czy_zalogowano==0){ continue;}
+            else if( czy_zalogowano == -2){
+                cerr << "error logowania";
+                break;
+            }
 
-            // gdy zalogowano:
+            // zrobic rozdzielenie na rozne typy - admin / user
 
-
-            if ( para == users.end() ) { // 1 - nie ma loginu, 2- bledne haslo, 3 - prezszlo
-                status = wychodzace(client_socket, "1");
+            while(1){ // gdy zalogowano:
+                string dostepne_funkcje = """Podaj numer funkcji:\n"
+                                        "1. Mozesz kupic bulki\n"
+                                        "2. Wyjsc na spacer\n"
+                                        "3. Spoktac sie z dziewczyna\n"
+                                        "   sorki, no tak, informatycy nie posiadaja kobiet\n"
+                                        "4. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
+                message = "3" + dostepne_funkcje;
+                status = wychodzace(client_socket, message);
+                cout << "wyslalismy cos" << message;
                 if(!status) { cout << "send error"; break; }
-                message = przychodzace(client_socket);
-                cout << message[0];
-                if( message[0] == '0') break;
-                else continue;
+
+                cout << "normalny program" << endl;
+                przychodzace(client_socket);
+                break;
             }
-            else if(para->second != hash_password) { // jeśli hash haseł jest różny 2
-                    // mes_to_send = "2"+to_string(count_try);
-                    status = wychodzace(client_socket, "2" + to_string(count_try));
-                    count_try--; // zmniejszamy ilość prob
-                    if(!status) { cout << "send error"; break; }
-                    message = przychodzace(client_socket);
-                    cout << message[0];
-                    if(count_try == -1){
-                        status = wychodzace(client_socket, "nie mozesz juz probowac. skontaktuj sie z adminem");
-                        if(!status) { cout << "send error"; break; }
-                        hack = 1;
-                        break;
-                    }
-                    if( message[0] == '0') break;
-                    else continue;
-            } else
-            { // tu się już zalogowaliśmy poprawnie wysyłamy 3
-                while(1){
-                    string dostepne_funkcje = """Podaj numer funkcji:\n"
-                                            "1. Mozesz kupic bulki\n"
-                                            "2. Wyjsc na spacer\n"
-                                            "3. Spoktac sie z dziewczyna\n"
-                                            "   sorki, no tak, informatycy nie posiadaja kobiet\n"
-                                            "4. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
-                    mes_to_send = "3" + dostepne_funkcje;
-                    status = wychodzace(client_socket, mes_to_send);
-                    cout << "wyslalismy cos" << mes_to_send;
-
-                    if(!status) { cout << "send error"; break; }
-
-                    cout << "normalny program" << endl;
-                    przychodzace(client_socket);
-                    break;
-                }
-            }
-
-            /*
-             *  Po logowaniu
-             */
             break;
         }
         closesocket(client_socket);
