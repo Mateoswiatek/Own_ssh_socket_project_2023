@@ -4,6 +4,7 @@
 #include <ws2tcpip.h>
 #include <map> // słowniki
 #include <vector>
+#include <set>
 
 /* może jsona się jeszcze dowali do tego
 #include <nlohmann/json.hpp>
@@ -115,6 +116,12 @@ int main() {
 
 // wszystko powyzej można do funkcji ?
 
+// alternatywnie, można zrobić pole dozwolonych adresow ip i tylko za ich pomocą łączyć, ew jeśli jest nowy adres ip a dane sie zgadzaja, to trzeba potwierdzic mailem
+// ewentualnie całe podsiecie banowac i trzymac tylko poczatkowe wartosci
+    set<string> ban_IP;
+    ban_IP.insert("192.168.56.2"); // zmienic na 1
+
+
     while(1){ // postawienie servera, teraz już cały czas działa i czeka na połączenie
         int dlugosc=sizeof(client); // !!!! ważne fest XD
 
@@ -123,11 +130,17 @@ int main() {
         if (client_socket == INVALID_SOCKET) {closesocket(gniazdo_root); cerr << "blad accept\n" << endl; return 1;}
 
         // sprawdzanie adresu IP przychodzącego, można byłoby jakoś przed nawiązaniem połączenia to zrobić
-        /*
+
         char clientIp[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &(client.sin_addr), clientIp, INET_ADDRSTRLEN);
-        cout << "Połączenie nawiązane z klientem o adresie IP: " << clientIp << endl;
-        */
+        cout << "adres IP: " << clientIp << endl;
+
+        if (ban_IP.find(clientIp) != ban_IP.end()) { // jeśli ip jest na zbanowanym
+            wychodzace(client_socket, "jestes zbanowany, ez");
+            closesocket(client_socket);
+            continue;
+        }
+
 
         while(1){ //obsługa połączenia przychodzącego, nasz socket to client_socket
             string message, login, hash_password;
@@ -150,25 +163,26 @@ int main() {
             if( hash_password == "-1"){cerr << "error przy odbieraniu danych"; break;}
             cout << "hash_password to #" << hash_password << "#" << endl;
 
-            // do tad dziala
-            cout << "Login stworzonego konta to:"<< users[0].getlogin();
-
             User zalogowany_user;
             int czy_zalogowano=0; // czy zalogowanu
             for (auto& user : users) {
                 cout << "Login stworzonego konta to:#"<< user.getlogin() << "#" << endl;
-                if(user.getlogin() == login) { // aby przy wiekszej ilosci przyspieszyc
-                    czy_zalogowano = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
-                    status = wychodzace(client_socket, to_string(czy_zalogowano)); // wysylamy stan
-                    if(!status){czy_zalogowano = -2; break;}
-                    message = przychodzace(client_socket); // wysylamy 1
-                    if( message[0] != '1'){czy_zalogowano = -2; break;}
-                    if(czy_zalogowano == 1) {
-                        zalogowany_user=user;
-                    }
-                    break;
+                cout<< "obiekt:#" <<user.getlogin() << "#" <<endl;
+                cout<< "przychodzace:#" << login << "#" << endl;
+
+                czy_zalogowano = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
+                cout << "status logowania:" << czy_zalogowano << endl;
+                status = wychodzace(client_socket, to_string(czy_zalogowano)); // wysylamy stan
+                if(!status){czy_zalogowano = -2; break;}
+                message = przychodzace(client_socket); // wysylamy 1
+                if( message[0] != '1'){czy_zalogowano = -2; break;}
+                if(czy_zalogowano == 1) {
+                    zalogowany_user=user;
                 }
+                break;
+
             }
+            cout << "wyszlismy";
             if(czy_zalogowano==0){ continue;}
             else if( czy_zalogowano == -2){
                 cerr << "error logowania";
