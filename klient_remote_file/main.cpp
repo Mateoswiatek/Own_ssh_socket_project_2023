@@ -39,7 +39,6 @@ string przychodzace(SOCKET socket){
 }
 
 int wychodzace(SOCKET socket, string message){
-    cout << "wiadomosc to: #" << message << "#" << endl;
     int send_bits; // ilość wysłanych bitów
     send_bits = send(socket, message.c_str(), message.length()+1, 0);
     return send_bits;
@@ -86,13 +85,13 @@ int main() {
 
         // można jako jedną rzecz zrobić
         message = przychodzace(gniazdo1);
-        cout << "#" << message << "#";
         if (message == ""){cout << "error po stornie servera"; break;}
+        cout<< message<< endl;
         cin >> mes_to_send;
         status = wychodzace(gniazdo1, mes_to_send); // wysyłamy login
         if(!status) { cout << "send error"; break; }
         message = przychodzace(gniazdo1);
-        cout << message;
+        cout << message << endl;
         if (message == ""){cout << "error po stornie servera"; break;}
         cin >> haslo;
 
@@ -105,19 +104,19 @@ int main() {
         message = przychodzace(gniazdo1); // informacja o logowaniu
 
         if(message[0] == '0'){
-            cout<< message << " czyli nie ma takiego loginu!";
+            cout<< " czyli nie ma takiego loginu!"; // << message << endl;
             status = wychodzace(gniazdo1, "1");
             if(!status) { cerr << "send error"; break; }
             continue;
         }
         else if(message[0] == '2'){ // bledne haslo
-            cout<< message << "Bledne haslo!";
+            cout<< "Bledne haslo!";
             status = wychodzace(gniazdo1, "1");
             if(!status) { cerr << "send error"; break; }
             continue;
         }
         else if(message[0] == '1'){ // zalogowaliśmy się, wiadomosc o tym juz dostalismy
-            cout<< message << "Zalogowales sie!";
+            cout<< "Zalogowales sie!" << endl;
             status = wychodzace(gniazdo1, "1");
             if(!status) { cerr << "send error"; break; }
         }
@@ -134,16 +133,27 @@ int main() {
             message = przychodzace(gniazdo1);
             cout << message;
             cin >> mes_to_send;
+            int wybor =stoi(mes_to_send);
             status = wychodzace(gniazdo1, mes_to_send);
             if (!status) {
                 cerr << "send error";
                 break;
             }
 
-            message = przychodzace(gniazdo1);
-            cout << message;
-            status = wychodzace(gniazdo1, "1");
-            if (!status) { cerr << "send error"; break; }
+            bool error=0;
+            switch (wybor) {
+                case 1:
+                    message = przychodzace(gniazdo1);
+                    cout << message << "\n\n\n";
+                    status = wychodzace(gniazdo1, "1");
+                    if (!status) { cerr << "send error"; error=1;}
+                    break;
+                case 2:
+                    break;
+
+            }
+            if(error){cout<<"blad wysylania danych";}
+
 
         }
 

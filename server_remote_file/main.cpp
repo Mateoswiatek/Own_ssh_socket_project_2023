@@ -17,8 +17,10 @@ public:
     User(string login, string hash_pass, int acc_type = 0) : _login(login), _hashpassword(hash_pass), _is_logged(0), _count_login_try(0), _block(0), _account_type(acc_type){}
     int try_login(string login, string password){ // 1 - zalogowano; 2 - bledne haslo; 0 - nie ma loginu
         if(login==_login){
+            if(_count_login_try == 4) { _block=1; return 0;} // jesli 5 razy ktos probował
             if(strcmp(_hashpassword.c_str(), password.c_str()) == 0 ){
                 _is_logged = 1;
+                _count_login_try=0; // zerujemy proby
                 return 1; // zalogowano
             }
             _count_login_try++;
@@ -28,6 +30,7 @@ public:
     }
     string getlogin(){return _login;}
     bool get_is_logged(){return _is_logged;}
+    bool is_block(){return _block;}
 
 private:
     string _login;
@@ -36,6 +39,7 @@ private:
     int _account_type; // 1 admin, 0 user
     bool _is_logged;
     bool _block; // czy jest zablokowany
+    // mozna dodac pole z czasem ostatniego logowania, jesli aktualna jest mniejsza niz 2 min to nie dac wpisac, jesli prob zrobil 3 no to na 1h i tak dalej, jak w telefonach
 };
 
 string przychodzace(SOCKET socket){ // tu dorobić sprawdzanie czy to co przychodzi jest stringiem
@@ -173,7 +177,7 @@ int main() {
             if( login == "-1"){cerr << "error przy odbieraniu danych"; break;}
             cout << "login to #" << login << "#" << endl;
 
-            message = "podaj haslo";
+            message = "Podaj haslo";
             status = wychodzace(client_socket, message);
             if(!status){break;}
 
@@ -185,7 +189,7 @@ int main() {
             int status_loginu=0;
             for (auto& user : users) {
                 status_loginu=0;
-                if(user.getlogin() == login) { // bo lecimy po kazdym elemencie
+                if(user.getlogin() == login and user.is_block()==0) { // bo lecimy po kazdym elemencie tylko nie zablokowanych
                     status_loginu = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
                     status = wychodzace(client_socket, to_string(status_loginu)); // wysylamy stan
                     if (!status) { status_loginu = -2; break; }
