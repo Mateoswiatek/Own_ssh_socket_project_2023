@@ -186,63 +186,65 @@ int main() {
             int status_loginu=0;
             for (auto& user : users) {
 
-                if(user.getlogin() == login and user.is_block()==0) { // bo lecimy po kazdym elemencie tylko nie zablokowanych
+                cout << "w bazie =" << "#" << user.getlogin() << "#" <<endl;
+                cout << "nasze =" << "#" << login << "#" << endl;
+                cout << "co zwraca warunek= " << strcmp(user.getlogin().c_str(), login.c_str()) << endl;
+                if(strcmp(user.getlogin().c_str(), login.c_str()) == 0) { // bo lecimy po kazdym elemencie tylko nie zablokowanych
                     status_loginu = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
-
-                    cout << "stan jest rowny: " << status_loginu;
-                    status = wychodzace(client_socket, to_string(status_loginu)); // wysylamy stan
-                    if (!status) { status_loginu = -2; break; }
-
-
-                    message = przychodzace(client_socket); // dostajemy 1
-                    if (message[0] != '1') { status_loginu = -2; break; }
-
-                    if (status_loginu == 1) {
-                        zalogowany_user = user;
+                    if (status_loginu == 1){
+                        zalogowany_user = user; // zapisujemy aktualnie zalogowanego
+                        break;
+                    }
+                    else{ // status loginu = 1,
                         break;
                     }
                 }
-                else{
-                    status_loginu = 0;
-                    status = wychodzace(client_socket, "0"); // wysylamy stan
-                    if (!status) {
-                        status_loginu = -2;
-                        break;
-                    }
-                    message = przychodzace(client_socket); // wysylamy 1
-                    if (message[0] != '1') {
-                        status_loginu = -2;
-                        break;
-                    }
-                } // jesli nie znaleziono takiego usera
+                else{ // status loginu po wszystkich userach = 0,nie ma loginu
+                    status_loginu = 0; // nie ma takiego loginu
+                }
             }
-            cout << "status loginu to"<<status_loginu;
-            if(status_loginu == -2){
-                cerr << "error logowania";
-                break;
+            cout << "status loginu= " << status_loginu << endl;
+
+            status = wychodzace(client_socket, to_string(status_loginu)); // wysylamy stan
+            if (!status) { break; }
+
+            message = przychodzace(client_socket); // dostajemy 1
+            if (message[0] != '1') { cerr << "error przy odbieraniu danych"; break; }
+
+            if(status_loginu != 1){
+                continue;
             }
-            else if(status_loginu != 1){ continue;}
+
 
             string nowy_login, hash_haslo;
             int czy_admin;
-            if(zalogowany_user.get_account_type() == 1){ // dodawanie uzytkownikow
+            if(zalogowany_user.get_account_type() == 1){ // czy jest rootem
+                status = wychodzace(client_socket, "root");
+                przychodzace(client_socket); // okejka roota
+
                 while(1) {
-                    status = wychodzace(client_socket, "root podaj nowego usera, nie? to wpisz 0");
+                    status = wychodzace(client_socket, "podaj nowego usera, nie? to wpisz 0");
                     nowy_login = przychodzace(client_socket);
-                    if(nowy_login == "0") { cout<< "wyszlismy"; break;}
+                    cout << "nowy login to:" << nowy_login << endl;
+                    if(strcmp(nowy_login.c_str(), "0") == 0) { cout<< "wyszlismy"; break;} // dostalismy ze nie chce, przechodzimy do normalnych, wysylamy
+
                     status = wychodzace(client_socket, "podaj haslo");
+                    cout << "status jest rowny: " << status << endl;
                     hash_password = przychodzace(client_socket);
+
                     status = wychodzace(client_socket, "czy ma byc adminem?");
                     czy_admin = stoi(przychodzace(client_socket));
 
                     User nowy(nowy_login, hash_password, czy_admin );
                     users.push_back(nowy);
-
                 }
                 for (auto& user : users) {
                     cout << "nazwa =" << user.getlogin() << endl << "haslo =" << user.getpassword() << endl << "typ =" << user.get_account_type() << endl;
                 }
 
+            }else{
+                status = wychodzace(client_socket, "user");
+                przychodzace(client_socket); // okejka usera
             }
 
             while (1) { // gdy zalogowano:

@@ -119,13 +119,13 @@ int main() {
         message = przychodzace(gniazdo1); // informacja o logowaniu
 
         if(message[0] == '0'){
-            cout<< " czyli nie ma takiego loginu!"; // << message << endl;
+            cout<< " czyli nie ma takiego loginu!" << endl; // << message << endl;
             status = wychodzace(gniazdo1, "1");
             if(!status) { cerr << "send error"; break; }
             continue;
         }
         else if(message[0] == '2'){ // bledne haslo
-            cout<< "Bledne haslo!";
+            cout<< "Bledne haslo!" << endl;
             status = wychodzace(gniazdo1, "1");
             if(!status) { cerr << "send error"; break; }
             continue;
@@ -145,31 +145,44 @@ int main() {
          *  gdzie każdy będzie miał tą swoją nazwę i rozmiar. i później te kafelki się będą wyświetlać.
          */
 
-        while(1) {
-            message = przychodzace(gniazdo1);
-            cout << message;
+        message = przychodzace(gniazdo1); // czy to root
+        cout << message;
+        if(message.substr(0, 4) == "root"){
+            status = wychodzace(gniazdo1, "1"); // okejka na roota
+            if(!status) { cerr << "send error"; break; }
 
-            if(message.substr(0, 4) == "root"){
-                while(1) {
-                    cin >> mes_to_send;
-                    status = wychodzace(gniazdo1, mes_to_send);
-                    if(mes_to_send == "0"){ break; }
-                    message = przychodzace(gniazdo1);
-                    cin >> mes_to_send;
+            while(1) {
+                message = przychodzace(gniazdo1); // podaj login
+                cout << message << endl;
 
-                    hash_haslo=hashowanie(mes_to_send);
-                    status = wychodzace(gniazdo1, hash_haslo);
-                    message = przychodzace(gniazdo1);
-                    cin >> mes_to_send;
-                    status = wychodzace(gniazdo1, mes_to_send);
-                    message = przychodzace(gniazdo1);
-                    cin >> mes_to_send;
-                    status = wychodzace(gniazdo1, mes_to_send);
-                    message = przychodzace(gniazdo1);
-                }
-                message = przychodzace(gniazdo1);
-                cout << message;
+                cin >> mes_to_send; // wpisujemy login
+                status = wychodzace(gniazdo1, mes_to_send); // wyslij login
+                if(strcmp(mes_to_send.c_str(), "0") == 0){ break; } // wysylamy ze nie chcemy, przechodizmy do normalnych, chcemy odbierac
+
+
+                message = przychodzace(gniazdo1); // podaj haslo
+                cout << message << endl;
+
+                cin >> mes_to_send;
+                hash_haslo=hashowanie(mes_to_send);
+                status = wychodzace(gniazdo1, hash_haslo); // wyslij haslo
+
+                message = przychodzace(gniazdo1); // podaj czy admin
+                cout << message << endl;
+
+                cin >> mes_to_send;
+                status = wychodzace(gniazdo1, mes_to_send); // wyslij czy admin
             }
+        }
+        else{
+            status = wychodzace(gniazdo1, "1"); // okejka usera
+            if(!status) { cerr << "send error"; break; }
+        }
+
+
+        while(1) {
+            message = przychodzace(gniazdo1); // normalne komendy
+            cout << message;
 
             cin >> mes_to_send;
             int wybor =stoi(mes_to_send);
