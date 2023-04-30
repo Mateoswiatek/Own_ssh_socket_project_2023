@@ -19,18 +19,18 @@ using namespace std;
 
 class User{
 public:
-    User() : _login(0){}
+    User() : _login("0"){}
     User(string login, string hash_pass, int acc_type = 0) : _login(login), _hashpassword(hash_pass), _is_logged(0), _count_login_try(0), _block(0), _account_type(acc_type){}
     int try_login(string login, string password){
         if(login==_login){
             if(password==_hashpassword){
                 _is_logged = 1;
-                return 1;
+                return 1; // zalogowano
             }
             _count_login_try++;
-            return -1;
+            return -1; // bledne haslo
         }
-        return 0;
+        return 0; // nie ma loginu
     }
     string getlogin(){return _login;}
     bool get_is_logged(){return _is_logged;}
@@ -51,7 +51,9 @@ string przychodzace(SOCKET socket){ // tu dorobić sprawdzanie czy to co przycho
     int recv_bits;
     char recv_frame[1024]; // musimy gdzieś zapisywać to co przychodzi
     recv_bits = recv( socket, recv_frame, 1024, 0 );
-    if( recv_bits == 0 || recv_bits == WSAECONNRESET ) { strcpy(recv_frame,"-1" ) ; } // jeśli nie otrzymaliśmy odpowiedzi
+    if( recv_bits < 1 ) {
+        strcpy(recv_frame,"-1" );
+    } // jeśli nie otrzymaliśmy odpowiedzi
     return recv_frame;
 }
 
@@ -149,16 +151,17 @@ int main() {
             cout << "hash_password to #" << hash_password << "#" << endl;
 
             // do tad dziala
+            cout << "Login stworzonego konta to:"<< users[0].getlogin();
 
             User zalogowany_user;
             int czy_zalogowano=0; // czy zalogowanu
             for (auto& user : users) {
-
+                cout << "Login stworzonego konta to:#"<< user.getlogin() << "#" << endl;
                 if(user.getlogin() == login) { // aby przy wiekszej ilosci przyspieszyc
                     czy_zalogowano = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
                     status = wychodzace(client_socket, to_string(czy_zalogowano)); // wysylamy stan
                     if(!status){czy_zalogowano = -2; break;}
-                    message = przychodzace(client_socket); // cokolwiek
+                    message = przychodzace(client_socket); // wysylamy 1
                     if( message[0] != '1'){czy_zalogowano = -2; break;}
                     if(czy_zalogowano == 1) {
                         zalogowany_user=user;

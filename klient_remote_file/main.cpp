@@ -8,7 +8,8 @@ using namespace std;
 // definiujemy sobie parametry
 // #define IP_SERV "192.168.56.1"
 // #define Port_SERV 9000
-
+// funkcja
+/*
 SOCKET open_connect(const string ip, const int port, struct sockaddr_in* ser){
     SOCKET _gniazdo;
     WSADATA _wsaData;
@@ -27,12 +28,13 @@ SOCKET open_connect(const string ip, const int port, struct sockaddr_in* ser){
     ser->sin_port = htons( port );
     return _gniazdo;
 }
+*/
 
 string przychodzace(SOCKET socket){
     int recv_bits;
     char recv_frame[1024]; // musimy gdzieś zapisywać to co przychodzi
     recv_bits = recv( socket, recv_frame, 1024, 0 );
-    if( recv_bits == 0 || recv_bits == WSAECONNRESET ) { strcpy(recv_frame,"Connection closed / Error" ) ; } // jeśli nie otrzymaliśmy odpowiedzi
+    if( recv_bits < 1 ) { strcpy(recv_frame,"Connection closed / Error" ) ; } // jeśli nie otrzymaliśmy odpowiedzi
     return recv_frame;
 }
 
@@ -47,9 +49,30 @@ int main() {
 
     const string IP_serv = "192.168.56.1";
     const int Port = 9021;
+    /*
     SOCKET gniazdo1;
     struct sockaddr_in ser;
     gniazdo1 = open_connect(IP_serv, Port, &ser);
+     */
+
+    SOCKET gniazdo1;
+    struct sockaddr_in ser; // instancje struktury które przechowują dane
+
+    WSADATA wsaData;
+    int result = WSAStartup( MAKEWORD(2,2), &wsaData); // używamy wersji 2.2
+    if(result != NO_ERROR) cout << "Initialization error.\n"; // jeśli się nie udało to dostajemy komunikat
+
+    gniazdo1 = socket( AF_INET, SOCK_STREAM, 0 ); // IPv4, IPPROTO_TCP
+    if( gniazdo1 == SOCKET_ERROR ){ // jeśli jest jakiś błąd
+        cout << "Initialization error.\n Error creating socket: %d\n" << WSAGetLastError() << endl; // wypisze nam ostatni blad
+        WSACleanup(); // "sprzątanie" po WSA
+        return 0;
+    }
+
+    memset( &ser , 0, sizeof( ser ) ); // pamięć na 0, są domyślne wartości w polach struktury
+    ser.sin_family = AF_INET; // używamy protokołu IPv4
+    ser.sin_addr.s_addr = inet_addr( "192.168.56.1" );
+    ser.sin_port = htons( Port );
 
 
     // ============== Część Klienta =======================
@@ -79,35 +102,26 @@ int main() {
         if(!status) { cout << "send error"; break; }
 
 
-        message = przychodzace(gniazdo1); // server wysyła OK - zalogowano, ilość pozostałych prób.
-        // gdy będzie równe 0, np blokuje adres ip i dodaje adres do listy (wiadomo, że można to obejść zmieniając
-        // adres ip, ale to tylko projekt przykładowy) tu aż się roi od dziur w bezpieczeństwie
+        message = przychodzace(gniazdo1); // informacja o logowaniu
 
-        // cashe switch przerobić
-        cout << "#" << message[0] << "# message[0]" << endl;
-
-        if(message[0] == '1'){
-            cout<< message << " czyli nie ma takiego loginu! chcesz sprobowac ponownie?";
-            cin >> mes_to_send;
-            status = wychodzace(gniazdo1, mes_to_send);
+        if(message[0] == '0'){
+            cout<< message << " czyli nie ma takiego loginu!";
+            status = wychodzace(gniazdo1, "1");
             if(!status) { cout << "send error"; break; }
-            if(mes_to_send[0] == '0') break;
-            else continue;
+            continue;
         }
-        else if(message[0] == '2'){ // bledne haslo
-            cout << "Bledne login lub haslo!\nPozostalo prob: " << message[1] << endl << "chcesz sprobowac ponownie?"<<endl;
-            cin >> mes_to_send;
-            status = wychodzace(gniazdo1, mes_to_send);
+        else if(message[0] == '1'){ // bledne haslo
+            cout<< message << "Bledne haslo!";
+            status = wychodzace(gniazdo1, "1");
             if(!status) { cout << "send error"; break; }
-            if(mes_to_send[0] == '0') break;
-            else continue;
+            continue;
         }
         else if(message[0] == '3'){ // zalogowaliśmy się, wiadomosc o tym juz dostalismy
-            cout << "Brawo, zalogowales sie" << endl;
-            cout << "#" << message.substr(1) << "#"; // obetnie pierwszy znak (zacznie od message[1] wyśiwetlać) bo mesage[0] jest do sterowania.
-
-            wychodzace(gniazdo1, "1");
+            cout<< message << "Zalogowales sie!";
+            status = wychodzace(gniazdo1, "1");
+            if(!status) { cout << "send error"; break; }
         }
+
 
         /*
          *  część po zalogowaniu jakieś menu, opcje do wyboru, każdy wybór wysyła inną waidomość i inaczej działa z tym co przyjdzie.
@@ -116,13 +130,14 @@ int main() {
          *  a tu na kliencie będzie to przedstawiane w postaci listy / później w postaci kafelek, albo wgl, obiektów wektor obiektów,
          *  gdzie każdy będzie miał tą swoją nazwę i rozmiar. i później te kafelki się będą wyświetlać.
          */
-
+        message = przychodzace(gniazdo1);
+        cout << message;
 
         break;
     }
     
 
-    std::cout << "Hello, World!" << std::endl;
+    cout << "blad po stronie servera!" << endl;
 
     WSACleanup(); // sprzątamy na koniec całego programu
     return 0;
