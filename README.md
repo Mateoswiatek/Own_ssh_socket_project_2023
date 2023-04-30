@@ -7,7 +7,7 @@ Server jest w stanie czuwania, 1 osoba jednocześnie może mieć dostęp. Logowa
 
 ## Funkcjonalności / opcje
 
-- [ ] Logowanie bezpośrednie do servera, hasło jawnie na serverze. 
+- [ ] Logowanie bezpośrednie do servera, hasło zahashowane
 Oddzielne komunikaty zwrotne dla:
     - nieistniejącego loginu
     - błędnego hasła
@@ -15,13 +15,21 @@ Oddzielne komunikaty zwrotne dla:
 - [ ] Ograniczenie prób podania hasła do zadanej ilości. Po przekroczeniu brak możliwości zalogowania się. Server się wyłącza, aby powrócić konieczne jest ponowne uruchomienie programu / servera.
 - [ ] Wyświetlanie "menu"
 
+    - wyswietlenie zawartosci katalogu / folderu
+    - przejście do folderu
+    - stworzenie folderu
+    - JESZCZE NIE MA:
+    - pobierz plik
+    - wyslij plik
+    - stworzenie pliku
+
 ## Przyszła rozbudowa / ulepszenie
 Jeśli starczy czasu, chęci i życia to: 
 - [ ] Wyczyszczenie kodu ze zbędnych lini testowych oraz zbyt obszernych komentarzy.
-- [ ] Zamana obsługi informacji na switch/cashe
-- [ ] Dodanie Funkcji Hashującej hasło (choć trochę zwiększenie bezpieczeństwa)
+- [x] Zamana obsługi informacji na switch/cashe
+- [x] Dodanie Funkcji Hashującej hasło (choć trochę zwiększenie bezpieczeństwa)
 
-- [ ] Dodanie funkcji do menu, na przykład:
+- [x] Dodanie funkcji do menu, na przykład:
     - skopiowanie podanego pliku,
     - wysłanie podanego pliku,
     - wyświetlenie plików w katalogu "udostępnionym"

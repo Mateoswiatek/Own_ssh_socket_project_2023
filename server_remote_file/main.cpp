@@ -242,7 +242,7 @@ int main() {
 
             while (1) { // gdy zalogowano:
                 string dostepne_funkcje = """Podaj numer funkcji:\n"
-                                          "1. wyswietl zawartosc foldera\n"
+                                          "1. wyswietl zawartosc folderu\n"
                                           "2. przejdz do folderu .. (nadrzedny)\n"
                                           "3. stworz folder\n"
                                           "4. pobierz plik\n"
