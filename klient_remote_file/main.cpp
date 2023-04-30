@@ -114,7 +114,7 @@ int main() {
         message = przychodzace(gniazdo1); // informacja o logowaniu
 
         if(message[0] == '0'){
-            cout<< " czyli nie ma takiego loginu!" << endl; // << message << endl;
+            cout<< "Nie ma takiego loginu!" << endl; // << message << endl;
             status = wychodzace(gniazdo1, "1");
             if(!status) { cerr << "send error"; break; }
             continue;

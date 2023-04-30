@@ -164,7 +164,6 @@ int main() {
 
             // moze to tez moznaby było dać do funkcji?
             message = "Witaj podaj login";
-            cout << message;
             status = wychodzace(client_socket, message);
             if(!status){break;}
 
