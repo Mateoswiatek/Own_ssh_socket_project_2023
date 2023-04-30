@@ -36,10 +36,6 @@ public:
     string getlogin(){return _login;}
     bool get_is_logged(){return _is_logged;}
 
-    bool operator<(const User& other) const {
-        return _login < other._login;
-    }
-
 private:
     string _login;
     string _hashpassword;
@@ -49,7 +45,7 @@ private:
     bool _block; // czy jest zablokowany
 };
 
-set<User> users;
+vector<User> users;
 
 
 string przychodzace(SOCKET socket){ // tu dorobić sprawdzanie czy to co przychodzi jest stringiem
@@ -71,7 +67,7 @@ int wychodzace(SOCKET socket, string message){
 int main() {
     // dodawanie admina
     User admin("admin", "admin", 1);
-    users.insert(admin);
+    users.push_back(admin);
 
     // dorobić czy konfiguracja czy normalna praca.
     // konfugiruacja jako oddzielna funkcja, aby admin tez mogl wejsc / ryzykowne
@@ -170,23 +166,45 @@ int main() {
             User zalogowany_user;
             int czy_zalogowano=0; // czy zalogowanu
             for (auto& user : users) {
-                czy_zalogowano = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
-                cout << "status logowania:" << czy_zalogowano << endl;
-                status = wychodzace(client_socket, to_string(czy_zalogowano)); // wysylamy stan
-                if(!status){czy_zalogowano = -2; break;}
-                message = przychodzace(client_socket); // wysylamy 1
-                if( message[0] != '1'){czy_zalogowano = -2; break;}
-                if(czy_zalogowano == 1) {
-                    zalogowany_user=user;
-                    break;
+                czy_zalogowano =0;
+                if(user.getlogin() == login) { // bo lecimy po kazdym elemencie
+                    czy_zalogowano = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
+                    status = wychodzace(client_socket, to_string(czy_zalogowano)); // wysylamy stan
+                    if (!status) {
+                        czy_zalogowano = -2;
+                        break;
+                    }
+                    message = przychodzace(client_socket); // wysylamy 1
+                    if (message[0] != '1') {
+                        czy_zalogowano = -2;
+                        break;
+                    }
+
+                    if (czy_zalogowano == 1) {
+                        zalogowany_user = user;
+                        break;
+                    }
+                    cout << "status logowania:" << czy_zalogowano << endl;
                 }
+                else{
+                    status = wychodzace(client_socket, "0"); // wysylamy stan
+                    if (!status) {
+                        czy_zalogowano = -2;
+                        break;
+                    }
+                    message = przychodzace(client_socket); // wysylamy 1
+                    if (message[0] != '1') {
+                        czy_zalogowano = -2;
+                        break;
+                    }
+                } // jesli nie znaleziono takiego usera
             }
             cout << "wyszlismy";
-            if(czy_zalogowano==0){ continue;}
-            else if( czy_zalogowano == -2){
+            if( czy_zalogowano == -2){
                 cerr << "error logowania";
                 break;
             }
+            else if(czy_zalogowano!=0){ continue;}
 
             // zrobic rozdzielenie na rozne typy - admin / user
 
