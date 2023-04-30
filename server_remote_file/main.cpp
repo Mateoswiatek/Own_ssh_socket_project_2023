@@ -84,12 +84,8 @@ int main() {
     // dodawanie admina
     User admin("admin", "8141937955048696534", 1); // haslo to "admin"
     users.push_back(admin);
-    User zwykly("abc", "abc");
+    User zwykly("abc", "3663726644998027833"); // haslo to abc
     users.push_back(zwykly);
-
-    // dorobić czy konfiguracja czy normalna praca.
-    // konfugiruacja jako oddzielna funkcja, aby admin tez mogl wejsc / ryzykowne
-
 
     // to wszystko do funkcji walnąć
     string IP_serv = "192.168.56.1";
@@ -239,7 +235,7 @@ int main() {
                     users.push_back(nowy);
                 }
                 for (auto& user : users) {
-                    cout << "nazwa =" << user.getlogin() << endl << "haslo =" << user.getpassword() << endl << "typ =" << user.get_account_type() << endl;
+                    cout << "nazwa = " << user.getlogin() << endl << "haslo =" << user.getpassword() << endl << "typ =" << user.get_account_type() << "\n\n";
                 }
 
             }else{
