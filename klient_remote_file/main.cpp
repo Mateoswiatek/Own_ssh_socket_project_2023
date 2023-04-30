@@ -130,11 +130,22 @@ int main() {
          *  a tu na kliencie będzie to przedstawiane w postaci listy / później w postaci kafelek, albo wgl, obiektów wektor obiektów,
          *  gdzie każdy będzie miał tą swoją nazwę i rozmiar. i później te kafelki się będą wyświetlać.
          */
-        message = przychodzace(gniazdo1);
-        cout << message;
-        cin >> mes_to_send;
-        status = wychodzace(gniazdo1, mes_to_send);
-        if(!status) { cerr << "send error"; break; }
+        while(1) {
+            message = przychodzace(gniazdo1);
+            cout << message;
+            cin >> mes_to_send;
+            status = wychodzace(gniazdo1, mes_to_send);
+            if (!status) {
+                cerr << "send error";
+                break;
+            }
+
+            message = przychodzace(gniazdo1);
+            cout << message;
+            status = wychodzace(gniazdo1, "1");
+            if (!status) { cerr << "send error"; break; }
+
+        }
 
 
         break;

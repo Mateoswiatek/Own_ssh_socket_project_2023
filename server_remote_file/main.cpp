@@ -5,18 +5,11 @@
 #include <map> // słowniki
 #include <vector>
 #include <set>
-
-/* może jsona się jeszcze dowali do tego
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
- */
+#include <filesystem>
 
 using namespace std;
 
 #pragma comment(lib,"ws2_32.lib")
-// definiujemy sobie parametry
-// #define IP_SERV "192.168.56.1"
-// #define Port_SERV 9000
 
 class User{
 public:
@@ -45,9 +38,6 @@ private:
     bool _block; // czy jest zablokowany
 };
 
-vector<User> users;
-
-
 string przychodzace(SOCKET socket){ // tu dorobić sprawdzanie czy to co przychodzi jest stringiem
     int recv_bits;
     char recv_frame[1024]; // musimy gdzieś zapisywać to co przychodzi
@@ -63,6 +53,34 @@ int wychodzace(SOCKET socket, string message){
     send_bits = send(socket, message.c_str(), message.length()+1, 0);
     return send_bits;
 }
+
+vector<User> users;
+
+int add_user(string login, string hash_pass, int acc_type = 0){
+    User new_user(login, hash_pass, acc_type);
+    users.push_back(new_user);
+}
+
+string wypisz_zawartosc(){
+    string message = "";
+    filesystem::path folder_path = "./";
+    for (const auto& entry : filesystem::directory_iterator(folder_path))
+    {
+        message.append(entry.path().filename().string());
+        message.append("\n");
+    }
+    return message;
+}
+
+
+
+
+
+
+
+
+
+
 
 int main() {
     // dodawanie admina
@@ -204,15 +222,38 @@ int main() {
 
             while(1){ // gdy zalogowano:
                 string dostepne_funkcje = """Podaj numer funkcji:\n"
-                                        "1. pobierz plik\n"
-                                        "2. wyslij plik\n"
-                                        "3. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
+                                        "1. wyswietl zawartosc foldera\n"
+                                        "2. przejdz do folderu\n"
+                                        "3. pobierz plik\n"
+                                        "4. wyslij plik\n"
+                                        "5. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
                 status = wychodzace(client_socket, dostepne_funkcje);
                 if(!status) { cout << "send error"; break; }
 
-                cout << "normalny program" << endl;
-                przychodzace(client_socket);
-                break;
+                int wybor =stoi(przychodzace(client_socket));
+                if( wybor== -1){cerr << "error przy odbieraniu danych"; break;}
+
+                cout << wybor;
+
+                bool error=0;
+                switch (wybor) {
+                    case 1:
+                        message = wypisz_zawartosc();
+                        cout << "\n\n\n\n" << message << endl;
+                        status = wychodzace(client_socket, message);
+                        if(!status) { cout << "send error"; error = 1; break; }
+
+                        przychodzace(client_socket);
+                        if( login == "-1"){cerr << "error przy odbieraniu danych"; break;}
+
+                        break;
+                    case 2:
+                        break;
+
+                }
+                if(error){ break;}
+
+
             }
             break;
         }
