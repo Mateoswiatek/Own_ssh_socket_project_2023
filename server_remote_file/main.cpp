@@ -114,8 +114,7 @@ int count_try = 3, hack=0; // ilosc prob logowania później można przerobić, 
                 if( message[0] == '0') break;
                 else continue;
             }
-            else{
-                if(para->second != hash_password) { // jeśli hash haseł jest różny 2
+            else if(para->second != hash_password) { // jeśli hash haseł jest różny 2
                     // mes_to_send = "2"+to_string(count_try);
                     status = wychodzace(gniazdo1, "2"+to_string(count_try));
                     count_try--; // zmniejszamy ilość prob
@@ -130,24 +129,24 @@ int count_try = 3, hack=0; // ilosc prob logowania później można przerobić, 
                     }
                     if( message[0] == '0') break;
                     else continue;
-                }else{ // tu się już zalogowaliśmy poprawnie wysyłamy 3
-
+            } else
+            { // tu się już zalogowaliśmy poprawnie wysyłamy 3
+                while(1){
                     string dostepne_funkcje = """Podaj numer funkcji:\n"
-                                                "1. Mozesz kupic bulki\n"
-                                                "2. Wyjsc na spacer\n"
-                                                "3. Spoktac sie z dziewczyna\n"
-                                                "   sorki, no tak, informatycy nie posiadaja kobiet\n"
-                                                "4. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
+                                            "1. Mozesz kupic bulki\n"
+                                            "2. Wyjsc na spacer\n"
+                                            "3. Spoktac sie z dziewczyna\n"
+                                            "   sorki, no tak, informatycy nie posiadaja kobiet\n"
+                                            "4. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
                     mes_to_send = "3" + dostepne_funkcje;
                     status = wychodzace(gniazdo1, mes_to_send);
                     cout << "wyslalismy cos" << mes_to_send;
 
                     if(!status) { cout << "send error"; break; }
-                    while(1){
-                        cout << "normalny program" << endl;
-                        break;
-                    }
 
+                    cout << "normalny program" << endl;
+                    przychodzace(gniazdo1);
+                    break;
                 }
             }
 

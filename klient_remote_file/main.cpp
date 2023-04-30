@@ -4,11 +4,29 @@
 #include <ws2tcpip.h>
 using namespace std;
 
-
 // #pragma comment(lib,"ws2_32.lib")
 // definiujemy sobie parametry
 // #define IP_SERV "192.168.56.1"
 // #define Port_SERV 9000
+
+SOCKET open_connect(const string ip, const int port, struct sockaddr_in* ser){
+    SOCKET _gniazdo;
+    WSADATA _wsaData;
+    if (WSAStartup( MAKEWORD( 2, 0 ), &_wsaData )){printf("blad WSDATA\n"); return 0;}
+
+    _gniazdo = socket( AF_INET, SOCK_STREAM, 0 );
+    if( _gniazdo == SOCKET_ERROR ){ // jeśli jest jakiś błąd
+        cout << "Initialization error.\n Error creating socket: %d\n" << WSAGetLastError() << endl;
+        WSACleanup();
+        return 0;
+    }
+
+    memset( & ser, 0, sizeof( ser ) ); // pamięć na 0, są domyślne wartości w polach struktury
+    ser->sin_family = AF_INET; // używamy protokołu IPv4
+    ser->sin_addr.s_addr = inet_addr( ip.c_str() ); // bo inet_addr potrzebuje typu "const char*"
+    ser->sin_port = htons( port );
+    return _gniazdo;
+}
 
 string przychodzace(SOCKET socket){
     int recv_bits;
@@ -27,26 +45,12 @@ int wychodzace(SOCKET socket, string message){
 
 int main() {
 
-    string IP_serv = "192.168.56.1";
-    int Port = 9021;
-
+    const string IP_serv = "192.168.56.1";
+    const int Port = 9021;
     SOCKET gniazdo1;
     struct sockaddr_in ser;
+    gniazdo1 = open_connect(IP_serv, Port, &ser);
 
-    WSADATA wsaData;
-    if (WSAStartup( MAKEWORD( 2, 0 ), &wsaData )){printf("blad WSDATA\n"); return 0;}
-
-    gniazdo1 = socket( AF_INET, SOCK_STREAM, 0 );
-    if( gniazdo1 == SOCKET_ERROR ){ // jeśli jest jakiś błąd
-        cout << "Initialization error.\n Error creating socket: %d\n" << WSAGetLastError() << endl;
-        WSACleanup();
-        return 0;
-    }
-
-    memset( & ser, 0, sizeof( ser ) ); // pamięć na 0, są domyślne wartości w polach struktury
-    ser.sin_family = AF_INET; // używamy protokołu IPv4
-    ser.sin_addr.s_addr = inet_addr( "192.168.56.1" );
-    ser.sin_port = htons( Port );
 
     // ============== Część Klienta =======================
 
