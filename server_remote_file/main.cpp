@@ -11,11 +11,23 @@ using json = nlohmann::json;
 
 using namespace std;
 
-
 #pragma comment(lib,"ws2_32.lib")
 // definiujemy sobie parametry
 // #define IP_SERV "192.168.56.1"
 // #define Port_SERV 9000
+
+class User{
+public:
+    User(string login, string hash_pass, int acc_type = 1);
+    bool login_try(string login,string hash_pass);
+
+private:
+    string _login;
+    string _hashpassword;
+    int _count_login_try;
+    int _account_type;
+
+};
 
 string przychodzace(SOCKET socket){
     int recv_bits;
@@ -58,7 +70,7 @@ int main() {
 
     if( bind( gniazdo_root,( sockaddr * ) &server, sizeof( server ) ) == SOCKET_ERROR )  // przypisanie adresu(gniazdo ma ten adres) , https://man7.org/linux/man-pages/man2/bind.2.html
     {
-        cout << "bind() failed. " << WSAGetLastError() << endl;
+        cout << "bind() failed." << WSAGetLastError() << endl;
         closesocket( gniazdo_root );
         return 0;
     }
@@ -70,14 +82,10 @@ int main() {
 /*
  *      Miejsce na różne dane do działania i wgl na zmienne etc
  */
-map < string, string >users; // slownik z uzytkownikami
-users["admin"] = "password"; // dodajemy uzytkownikow, kiedys mozna zrobic czytanie z pliku
-int count_try = 3, hack=0; // ilosc prob logowania później można przerobić, iż każdy użytownik ma oddzielny licznik, też w pliku np.
+
 
     while(1){ // postawienie servera, teraz już cały czas działa i czeka na połączenie
         string message, login, mes_to_send, hash_password;
-        if (hack) break; // zamiast tego, można zrobić listę np adresów IP które są już wykluczone, i fizycznie na kompie trzeba je usunąć z tej listy
-        // choć to i tak kiepsko, bo można sobie zmienić adres IP typu vpn, więc i tak to nie jest idealne zabezpieczenie
 
         int dlugosc=sizeof(client); // !!!! ważne fest XD
 
@@ -121,7 +129,7 @@ int count_try = 3, hack=0; // ilosc prob logowania później można przerobić, 
                     if(!status) { cout << "send error"; break; }
                     message = przychodzace(gniazdo1);
                     cout << message[0];
-                    if(count_try == 0){
+                    if(count_try == -1){
                         status = wychodzace(gniazdo1, "nie mozesz juz probowac. skontaktuj sie z adminem");
                         if(!status) { cout << "send error"; break; }
                         hack = 1;
