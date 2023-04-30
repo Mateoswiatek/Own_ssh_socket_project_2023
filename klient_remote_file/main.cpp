@@ -107,19 +107,19 @@ int main() {
         if(message[0] == '0'){
             cout<< message << " czyli nie ma takiego loginu!";
             status = wychodzace(gniazdo1, "1");
-            if(!status) { cout << "send error"; break; }
+            if(!status) { cerr << "send error"; break; }
             continue;
         }
-        else if(message[0] == '1'){ // bledne haslo
+        else if(message[0] == '2'){ // bledne haslo
             cout<< message << "Bledne haslo!";
             status = wychodzace(gniazdo1, "1");
-            if(!status) { cout << "send error"; break; }
+            if(!status) { cerr << "send error"; break; }
             continue;
         }
-        else if(message[0] == '3'){ // zalogowaliśmy się, wiadomosc o tym juz dostalismy
+        else if(message[0] == '1'){ // zalogowaliśmy się, wiadomosc o tym juz dostalismy
             cout<< message << "Zalogowales sie!";
             status = wychodzace(gniazdo1, "1");
-            if(!status) { cout << "send error"; break; }
+            if(!status) { cerr << "send error"; break; }
         }
 
 
@@ -132,6 +132,10 @@ int main() {
          */
         message = przychodzace(gniazdo1);
         cout << message;
+        cin >> mes_to_send;
+        status = wychodzace(gniazdo1, mes_to_send);
+        if(!status) { cerr << "send error"; break; }
+
 
         break;
     }

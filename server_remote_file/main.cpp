@@ -164,60 +164,50 @@ int main() {
             cout << "hash_password to #" << hash_password << "#" << endl;
 
             User zalogowany_user;
-            int czy_zalogowano=0; // czy zalogowanu
+            int status_loginu=0;
             for (auto& user : users) {
-                czy_zalogowano =0;
+                status_loginu=0;
                 if(user.getlogin() == login) { // bo lecimy po kazdym elemencie
-                    czy_zalogowano = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
-                    status = wychodzace(client_socket, to_string(czy_zalogowano)); // wysylamy stan
-                    if (!status) {
-                        czy_zalogowano = -2;
-                        break;
-                    }
-                    message = przychodzace(client_socket); // wysylamy 1
-                    if (message[0] != '1') {
-                        czy_zalogowano = -2;
-                        break;
-                    }
+                    status_loginu = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
+                    status = wychodzace(client_socket, to_string(status_loginu)); // wysylamy stan
+                    if (!status) { status_loginu = -2; break; }
 
-                    if (czy_zalogowano == 1) {
+                    message = przychodzace(client_socket); // wysylamy 1
+                    if (message[0] != '1') { status_loginu = -2; break; }
+
+                    if (status_loginu == 1) {
                         zalogowany_user = user;
                         break;
                     }
-                    cout << "status logowania:" << czy_zalogowano << endl;
                 }
                 else{
+                    status_loginu = 0;
                     status = wychodzace(client_socket, "0"); // wysylamy stan
                     if (!status) {
-                        czy_zalogowano = -2;
+                        status_loginu = -2;
                         break;
                     }
                     message = przychodzace(client_socket); // wysylamy 1
                     if (message[0] != '1') {
-                        czy_zalogowano = -2;
+                        status_loginu = -2;
                         break;
                     }
                 } // jesli nie znaleziono takiego usera
             }
-            cout << "wyszlismy";
-            if( czy_zalogowano == -2){
+            if(status_loginu == -2){
                 cerr << "error logowania";
                 break;
             }
-            else if(czy_zalogowano!=0){ continue;}
+            else if(status_loginu != 1){ continue;}
 
             // zrobic rozdzielenie na rozne typy - admin / user
 
             while(1){ // gdy zalogowano:
                 string dostepne_funkcje = """Podaj numer funkcji:\n"
-                                        "1. Mozesz kupic bulki\n"
-                                        "2. Wyjsc na spacer\n"
-                                        "3. Spoktac sie z dziewczyna\n"
-                                        "   sorki, no tak, informatycy nie posiadaja kobiet\n"
-                                        "4. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
-                message = "3" + dostepne_funkcje;
-                status = wychodzace(client_socket, message);
-                cout << "wyslalismy cos" << message;
+                                        "1. pobierz plik\n"
+                                        "2. wyslij plik\n"
+                                        "3. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
+                status = wychodzace(client_socket, dostepne_funkcje);
                 if(!status) { cout << "send error"; break; }
 
                 cout << "normalny program" << endl;
