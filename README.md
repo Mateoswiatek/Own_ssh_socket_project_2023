@@ -33,7 +33,10 @@ Jeśli starczy czasu, chęci i życia to:
 - [ ] Dodanie Pliku z logami tego co się dzieje na serverze + niezależny program który cyklicznie wykonuje kopię tego pliku do zypełnie innej lokalizacji (w przypadku ataku i usunięcia śladów z tego pliku)
 - [ ] Zamiana hashu na klucze asymetryczne
 - [ ] Dodanie "jakiś" zabezpieczeń
+- [ ] Dodanie do pola
 - [ ] Przeniesienie pomysłów z kodu tutaj do README
+
+
 
 ## Wnioski
 Projekt sam w sobie jest stosunkowo prosty, lecz przy obecnej cyfryzacji, umiejętności związane z samodzielnym zarządzaniem ruchem w sieci jest wręcz niezbędna dla każdego "informatyka"

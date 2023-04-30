@@ -8,11 +8,8 @@
 
 using namespace std;
 
-// #pragma comment(lib,"ws2_32.lib")
-// definiujemy sobie parametry
-// #define IP_SERV "192.168.56.1"
-// #define Port_SERV 9000
-// funkcja
+
+// do funkcji, ale ma problem
 /*
 SOCKET open_connect(const string ip, const int port, struct sockaddr_in* ser){
     SOCKET _gniazdo;
@@ -54,8 +51,6 @@ string hashowanie(string tekst){
     ostringstream oss;
     oss << hash_value;
     string hash_str = oss.str();
-    cout << "Hash of \"" << tekst << "\" is: " << hash_str << endl;
-
     return hash_str;
 }
 
@@ -98,7 +93,7 @@ int main() {
         int status;
         string haslo, message, mes_to_send, hash_haslo;
 
-        // można jako jedną rzecz zrobić
+        // moze funkcje logujaca można jako jedną rzecz zrobić
         message = przychodzace(gniazdo1);
         if (message == ""){cout << "error po stornie servera"; break;}
         cout<< message<< endl;
@@ -130,22 +125,13 @@ int main() {
             if(!status) { cerr << "send error"; break; }
             continue;
         }
-        else if(message[0] == '1'){ // zalogowaliśmy się, wiadomosc o tym juz dostalismy
+        else if(message[0] == '1'){ // zalogowaliśmy się
             cout<< "Zalogowales sie!" << endl;
             status = wychodzace(gniazdo1, "1");
             if(!status) { cerr << "send error"; break; }
         }
 
-
-        /*
-         *  część po zalogowaniu jakieś menu, opcje do wyboru, każdy wybór wysyła inną waidomość i inaczej działa z tym co przyjdzie.
-         *  np może być wysłanie pliku, to w tedy wybieramy plik i dalej wysyła się jego zawartość... etc
-         *  możemy wyświetlić pliki, to w tedy leci odpowiednia komenda, i zwraca listę elementów, np dwójkami, nazwa,rozmiar
-         *  a tu na kliencie będzie to przedstawiane w postaci listy / później w postaci kafelek, albo wgl, obiektów wektor obiektów,
-         *  gdzie każdy będzie miał tą swoją nazwę i rozmiar. i później te kafelki się będą wyświetlać.
-         */
-
-        message = przychodzace(gniazdo1); // czy to root
+        message = przychodzace(gniazdo1); // czy to root rozdzielenie na normalny i rootowski profil
         cout << message;
         if(message.substr(0, 4) == "root"){
             status = wychodzace(gniazdo1, "1"); // okejka na roota
@@ -195,28 +181,29 @@ int main() {
             bool error=0;
             switch (wybor) {
                 case 1:
-                    message = przychodzace(gniazdo1);
+                    message = przychodzace(gniazdo1); //wyswietla nam zawartosc folderu
                     cout << message << "\n\n\n";
-                    status = wychodzace(gniazdo1, "1");
+                    status = wychodzace(gniazdo1, "1"); // okejka
                     if (!status) { cerr << "send error"; error=1;}
                     break;
                 case 2:
-                    message = przychodzace(gniazdo1);
+                    message = przychodzace(gniazdo1); // podawanie nazwy
                     cout << message << "\n";
 
                     cin >> mes_to_send;
-                    status = wychodzace(gniazdo1, mes_to_send);
+                    status = wychodzace(gniazdo1, mes_to_send); // wysylanie gdzie przechodzimy
                     if (!status) { cerr << "send error"; error=1;}
 
-                    message = przychodzace(gniazdo1);
+                    message = przychodzace(gniazdo1); // wyswietlenie aktualnej sciezki
                     cout << message << "\n";
 
-                    status = wychodzace(gniazdo1, "1");
+                    status = wychodzace(gniazdo1, "1"); // okejka
                     if (!status) { cerr << "send error"; error=1;}
 
                     break;
+
                 case 3:
-                    message = przychodzace(gniazdo1); // ze musimy folder podac
+                    message = przychodzace(gniazdo1); // tworzenie folderu, podajemy nazwe
                     cout << message << "\n";
 
                     cin >> mes_to_send;
@@ -226,8 +213,11 @@ int main() {
                     message = przychodzace(gniazdo1); // info zwrotne czy sie udalo
                     cout << message << "\n";
 
-                    status = wychodzace(gniazdo1, "1");
+                    status = wychodzace(gniazdo1, "1"); // okejka
                     if (!status) { cerr << "send error"; error=1;}
+
+                    break;
+
                 case 4:
 
                     message = przychodzace(gniazdo1); // ze musimy nazwe pliku podac
@@ -259,14 +249,11 @@ int main() {
 
             }
             if(error){cout<<"blad wysylania danych";}
-
-
         }
 
-
+        // tu poza komendami normalnymi
         break;
     }
-    
 
     cout << "blad po stronie servera!" << endl;
 

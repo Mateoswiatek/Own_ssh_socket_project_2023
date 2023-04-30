@@ -19,7 +19,7 @@ public:
     User(string login, string hash_pass, int acc_type = 0) : _login(login), _hashpassword(hash_pass), _is_logged(0), _count_login_try(0), _block(0), _account_type(acc_type){}
     int try_login(string login, string password){ // 1 - zalogowano; 2 - bledne haslo; 0 - nie ma loginu
         if(login==_login){
-            if(_count_login_try == 4) { _block=1; return 0;} // jesli 5 razy ktos probował
+            if(_count_login_try == 4) { _block=1; return 0;} // jesli 5 razy ktos probował to blokujemy
             if(strcmp(_hashpassword.c_str(), password.c_str()) == 0 ){
                 _is_logged = 1;
                 _count_login_try=0; // zerujemy proby
@@ -32,7 +32,7 @@ public:
     }
     string getlogin(){return _login;}
     string getpassword(){return _hashpassword;}
-    bool get_is_logged(){return _is_logged;}
+    bool get_is_logged(){return _is_logged;} // dlaszy rozwoj, np dla admina kto zalogowany jest
     bool is_block(){return _block;}
     bool get_account_type(){ return _account_type;}
 
@@ -46,13 +46,13 @@ private:
     // mozna dodac pole z czasem ostatniego logowania, jesli aktualna jest mniejsza niz 2 min to nie dac wpisac, jesli prob zrobil 3 no to na 1h i tak dalej, jak w telefonach
 };
 
-string przychodzace(SOCKET socket){ // tu dorobić sprawdzanie czy to co przychodzi jest stringiem
+string przychodzace(SOCKET socket){ // tu mozna by dorobić sprawdzanie czy to co przychodzi jest stringiem, sql injection
     int recv_bits;
-    char recv_frame[1024]; // musimy gdzieś zapisywać to co przychodzi
+    char recv_frame[1024]; // bufor
     recv_bits = recv( socket, recv_frame, 1024, 0 );
     if( recv_bits < 1 ) {
         strcpy(recv_frame,"-1" );
-    } // jeśli nie otrzymaliśmy odpowiedzi
+    } // jeśli nie otrzymaliśmy odpowiedzi dajemy "-1"
     return recv_frame;
 }
 
@@ -62,14 +62,14 @@ int wychodzace(SOCKET socket, string message){
     return send_bits;
 }
 
-vector<User> users;
+vector<User> users; // vektor z userami
 
-int add_user(string login, string hash_pass, int acc_type = 0){
+int add_user(string login, string hash_pass, int acc_type = 0){ // dodawanie userow
     User new_user(login, hash_pass, acc_type);
     users.push_back(new_user);
 }
 
-string wypisz_zawartosc(){
+string wypisz_zawartosc(){ // wyswietlamy zawartosc folderu
     string message = "";
     filesystem::path folder_path = "./";
     for (const auto& entry : filesystem::directory_iterator(folder_path))
@@ -84,8 +84,10 @@ int main() {
     // dodawanie admina
     User admin("admin", "8141937955048696534", 1); // haslo to "admin"
     users.push_back(admin);
+    // zwyklego usera
     User zwykly("abc", "3663726644998027833"); // haslo to abc
     users.push_back(zwykly);
+
 
     // to wszystko do funkcji walnąć
     string IP_serv = "192.168.56.1";
@@ -133,7 +135,7 @@ int main() {
 // alternatywnie, można zrobić pole dozwolonych adresow ip i tylko za ich pomocą łączyć, ew jeśli jest nowy adres ip a dane sie zgadzaja, to trzeba potwierdzic mailem
 // ewentualnie całe podsiecie banowac i trzymac tylko poczatkowe wartosci
     set<string> ban_IP;
-    ban_IP.insert("192.168.56.2"); // zmienic na 1
+    ban_IP.insert("192.168.56.2"); // zmienic na 1 w tedy nie bede mogl sie zalogowac
 
 
     while(1){ // postawienie servera, teraz już cały czas działa i czeka na połączenie
@@ -143,7 +145,7 @@ int main() {
         client_socket = accept(gniazdo_root, (struct sockaddr *) &client, &dlugosc); // client_socket teraz odpowiada za połączenie
         if (client_socket == INVALID_SOCKET) {closesocket(gniazdo_root); cerr << "blad accept\n" << endl; return 1;}
 
-        // sprawdzanie adresu IP przychodzącego, można byłoby jakoś przed nawiązaniem połączenia to zrobić
+        // sprawdzanie adresu IP przychodzącego, można byłoby jakoś przed nawiązaniem połączenia to zrobić inny interfejs komunikacji
 
         char clientIp[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &(client.sin_addr), clientIp, INET_ADDRSTRLEN);
@@ -168,7 +170,6 @@ int main() {
 
             login = przychodzace(client_socket); // odbieramy login
             if( login == "-1"){cerr << "error przy odbieraniu danych"; break;}
-            cout << "login to #" << login << "#" << endl;
 
             message = "Podaj haslo";
             status = wychodzace(client_socket, message);
@@ -176,16 +177,12 @@ int main() {
 
             hash_password = przychodzace(client_socket);
             if( hash_password == "-1"){cerr << "error przy odbieraniu danych"; break;}
-            cout << "hash_password to #" << hash_password << "#" << endl;
 
             User zalogowany_user;
             int status_loginu=0;
             for (auto& user : users) {
-
-                cout << "w bazie =" << "#" << user.getlogin() << "#" <<endl;
-                cout << "nasze =" << "#" << login << "#" << endl;
-                cout << "co zwraca warunek= " << strcmp(user.getlogin().c_str(), login.c_str()) << endl;
-                if(strcmp(user.getlogin().c_str(), login.c_str()) == 0) { // bo lecimy po kazdym elemencie tylko nie zablokowanych
+                //if(user.is_block()){ ban_IP.insert(clientIp); }
+                if(strcmp(user.getlogin().c_str(), login.c_str()) == 0 and user.is_block() == 0) { // bo lecimy po kazdym elemencie tylko nie zablokowanych
                     status_loginu = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
                     if (status_loginu == 1){
                         zalogowany_user = user; // zapisujemy aktualnie zalogowanego
@@ -199,7 +196,6 @@ int main() {
                     status_loginu = 0; // nie ma takiego loginu
                 }
             }
-            cout << "status loginu= " << status_loginu << endl;
 
             status = wychodzace(client_socket, to_string(status_loginu)); // wysylamy stan
             if (!status) { break; }
@@ -207,12 +203,12 @@ int main() {
             message = przychodzace(client_socket); // dostajemy 1
             if (message[0] != '1') { cerr << "error przy odbieraniu danych"; break; }
 
-            if(status_loginu != 1){
+            if(status_loginu != 1){ // jesli sie nie udalo zalogowac
                 continue;
             }
 
 
-            string nowy_login, hash_haslo;
+            string nowy_login, hash_haslo;  // funkcjonalnosci admin / user
             int czy_admin;
             if(zalogowany_user.get_account_type() == 1){ // czy jest rootem
                 status = wychodzace(client_socket, "root");
@@ -236,6 +232,7 @@ int main() {
                 }
                 for (auto& user : users) {
                     cout << "nazwa = " << user.getlogin() << endl << "haslo =" << user.getpassword() << endl << "typ =" << user.get_account_type() << "\n\n";
+                    // dla nas, bardziej do testow
                 }
 
             }else{
@@ -269,7 +266,6 @@ int main() {
                 bool error = 0;
                 switch (wybor) {
                     case 1:
-                        cout << " pierwsza opcja" << endl;
 
                         message = wypisz_zawartosc();
                         cout << "\n\n\n\n" << message << endl;
@@ -298,6 +294,7 @@ int main() {
                         folder = przychodzace(client_socket);
                         if (folder == "-1") {
                             cerr << "error przy odbieraniu danych";
+                            error = 1;
                             break;
                         }
 
@@ -306,7 +303,7 @@ int main() {
                         message = "jestes w: " + filesystem::current_path().string(); // wysyłamy ścieżkę
                         status = wychodzace(client_socket, message);
                         if (!status) {
-                            cout << "send error";
+                            cerr << "send error";
                             error = 1;
                             break;
                         }
@@ -314,6 +311,7 @@ int main() {
                         message = przychodzace(client_socket);
                         if (message == "-1") {
                             cerr << "error przy odbieraniu danych";
+                            error = 1;
                             break;
                         }
                         break;
@@ -322,7 +320,7 @@ int main() {
                         message = "podaj nazwe folderu ktory chcesz utworzyc";
                         status = wychodzace(client_socket, message);
                         if (!status) {
-                            cout << "send error";
+                            cerr << "send error";
                             error = 1;
                             break;
                         }
@@ -330,6 +328,7 @@ int main() {
                         folder = przychodzace(client_socket);
                         if (folder == "-1") {
                             cerr << "error przy odbieraniu danych";
+                            error = 1;
                             break;
                         }
 
@@ -338,7 +337,7 @@ int main() {
                         message = "utworzyles nowy folder w " + wypisz_zawartosc();
                         status = wychodzace(client_socket, message);
                         if (!status) {
-                            cout << "send error";
+                            cerr << "send error";
                             error = 1;
                             break;
                         }
@@ -346,6 +345,7 @@ int main() {
                         message = przychodzace(client_socket);
                         if (message == "-1") {
                             cerr << "error przy odbieraniu danych";
+                            error = 1;
                             break;
                         }
                         break;
@@ -396,18 +396,17 @@ int main() {
                         plik.close();
 
                 }
-                if (error) { break; }
-
+                // tu mozna by wyciągnąćniektóre rzeczy wspólne, ale wolę nie, abym nie musiał grzebać jakbym coś dodawał "nietypowego"
+                if (error) { break; } // jeśli jest błąd to wychodzimy z zalogowania
 
             }
 
-            break;
+            break; // zrywamy połączenie aby server mógł nadal czekac na polaczenie od innych
         }
         closesocket(client_socket);
     }
 
-
-    std::cout << "Hello, World!" << std::endl;
+    std::cout << "Hello, World!" << std::endl; // nigdy, bo server ciagle bedzie stal, ewentualnie tu jakies prace na servezre
 
     WSACleanup(); // sprzątamy na koniec całego programu
     return 0;
