@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <fstream>
 
+
 using namespace std;
 
 #pragma comment(lib,"ws2_32.lib")
@@ -30,8 +31,10 @@ public:
         return 0; // nie ma loginu
     }
     string getlogin(){return _login;}
+    string getpassword(){return _hashpassword;}
     bool get_is_logged(){return _is_logged;}
     bool is_block(){return _block;}
+    bool get_account_type(){ return _account_type;}
 
 private:
     string _login;
@@ -77,19 +80,12 @@ string wypisz_zawartosc(){
     return message;
 }
 
-
-
-
-
-
-
-
-
-
 int main() {
     // dodawanie admina
-    User admin("admin", "admin", 1);
+    User admin("admin", "8141937955048696534", 1); // haslo to "admin"
     users.push_back(admin);
+    User zwykly("abc", "abc");
+    users.push_back(zwykly);
 
     // dorobić czy konfiguracja czy normalna praca.
     // konfugiruacja jako oddzielna funkcja, aby admin tez mogl wejsc / ryzykowne
@@ -170,10 +166,11 @@ int main() {
 
             // moze to tez moznaby było dać do funkcji?
             message = "Witaj podaj login";
+            cout << message;
             status = wychodzace(client_socket, message);
             if(!status){break;}
 
-            login = przychodzace(client_socket);
+            login = przychodzace(client_socket); // odbieramy login
             if( login == "-1"){cerr << "error przy odbieraniu danych"; break;}
             cout << "login to #" << login << "#" << endl;
 
@@ -188,13 +185,16 @@ int main() {
             User zalogowany_user;
             int status_loginu=0;
             for (auto& user : users) {
-                status_loginu=0;
+
                 if(user.getlogin() == login and user.is_block()==0) { // bo lecimy po kazdym elemencie tylko nie zablokowanych
                     status_loginu = user.try_login(login, hash_password); // probujemy sie zalogowac na tego usera
+
+                    cout << "stan jest rowny: " << status_loginu;
                     status = wychodzace(client_socket, to_string(status_loginu)); // wysylamy stan
                     if (!status) { status_loginu = -2; break; }
 
-                    message = przychodzace(client_socket); // wysylamy 1
+
+                    message = przychodzace(client_socket); // dostajemy 1
                     if (message[0] != '1') { status_loginu = -2; break; }
 
                     if (status_loginu == 1) {
@@ -216,33 +216,59 @@ int main() {
                     }
                 } // jesli nie znaleziono takiego usera
             }
+            cout << "status loginu to"<<status_loginu;
             if(status_loginu == -2){
                 cerr << "error logowania";
                 break;
             }
             else if(status_loginu != 1){ continue;}
 
-            // zrobic rozdzielenie na rozne typy - admin / user
+            string nowy_login, hash_haslo;
+            int czy_admin;
+            if(zalogowany_user.get_account_type() == 1){ // dodawanie uzytkownikow
+                while(1) {
+                    status = wychodzace(client_socket, "root podaj nowego usera, nie? to wpisz 0");
+                    nowy_login = przychodzace(client_socket);
+                    if(nowy_login == "0") { cout<< "wyszlismy"; break;}
+                    status = wychodzace(client_socket, "podaj haslo");
+                    hash_password = przychodzace(client_socket);
+                    status = wychodzace(client_socket, "czy ma byc adminem?");
+                    czy_admin = stoi(przychodzace(client_socket));
 
-            while(1){ // gdy zalogowano:
+                    User nowy(nowy_login, hash_password, czy_admin );
+                    users.push_back(nowy);
+
+                }
+                for (auto& user : users) {
+                    cout << "nazwa =" << user.getlogin() << endl << "haslo =" << user.getpassword() << endl << "typ =" << user.get_account_type() << endl;
+                }
+
+            }
+
+            while (1) { // gdy zalogowano:
                 string dostepne_funkcje = """Podaj numer funkcji:\n"
-                                        "1. wyswietl zawartosc foldera\n"
-                                        "2. przejdz do folderu .. (nadrzedny)\n"
-                                        "3. stworz folder\n"
-                                        "4. pobierz plik\n"
-                                        "5. wyslij plik\n"
-                                        "6. To napisz algorytm na szukanie kobiety, moze pomoze\n""";
+                                          "1. wyswietl zawartosc foldera\n"
+                                          "2. przejdz do folderu .. (nadrzedny)\n"
+                                          "3. stworz folder\n"
+                                          "4. pobierz plik\n"
+                                          "5. wyslij plik\n""";
                 status = wychodzace(client_socket, dostepne_funkcje);
-                if(!status) { cout << "send error"; break; }
+                if (!status) {
+                    cout << "send error";
+                    break;
+                }
 
-                int wybor =stoi(przychodzace(client_socket));
-                if( wybor== -1){cerr << "error przy odbieraniu danych"; break;}
+                int wybor = stoi(przychodzace(client_socket));
+                if (wybor == -1) {
+                    cerr << "error przy odbieraniu danych";
+                    break;
+                }
 
                 cout << wybor;
 
                 string folder, nazwa_pliku;
 
-                bool error=0;
+                bool error = 0;
                 switch (wybor) {
                     case 1:
                         cout << " pierwsza opcja" << endl;
@@ -250,45 +276,80 @@ int main() {
                         message = wypisz_zawartosc();
                         cout << "\n\n\n\n" << message << endl;
                         status = wychodzace(client_socket, message);
-                        if(!status) { cout << "send error"; error = 1; break; }
+                        if (!status) {
+                            cout << "send error";
+                            error = 1;
+                            break;
+                        }
 
-                        message =przychodzace(client_socket);
-                        if( message == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        message = przychodzace(client_socket);
+                        if (message == "-1") {
+                            cerr << "error przy odbieraniu danych";
+                            break;
+                        }
                         break;
                     case 2:
                         message = "podaj nazwe folderu";
                         status = wychodzace(client_socket, message);
-                        if(!status) { cout << "send error"; error = 1; break; }
+                        if (!status) {
+                            cout << "send error";
+                            error = 1;
+                            break;
+                        }
 
                         folder = przychodzace(client_socket);
-                        if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        if (folder == "-1") {
+                            cerr << "error przy odbieraniu danych";
+                            break;
+                        }
 
                         filesystem::current_path("./" + folder);
 
                         message = "jestes w: " + filesystem::current_path().string(); // wysyłamy ścieżkę
                         status = wychodzace(client_socket, message);
-                        if(!status) { cout << "send error"; error = 1; break; }
+                        if (!status) {
+                            cout << "send error";
+                            error = 1;
+                            break;
+                        }
 
                         message = przychodzace(client_socket);
-                        if( message == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        if (message == "-1") {
+                            cerr << "error przy odbieraniu danych";
+                            break;
+                        }
                         break;
 
                     case 3:
                         message = "podaj nazwe folderu ktory chcesz utworzyc";
                         status = wychodzace(client_socket, message);
-                        if(!status) { cout << "send error"; error = 1; break; }
+                        if (!status) {
+                            cout << "send error";
+                            error = 1;
+                            break;
+                        }
 
                         folder = przychodzace(client_socket);
-                        if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        if (folder == "-1") {
+                            cerr << "error przy odbieraniu danych";
+                            break;
+                        }
 
                         filesystem::create_directory(folder);
 
                         message = "utworzyles nowy folder w " + wypisz_zawartosc();
                         status = wychodzace(client_socket, message);
-                        if(!status) { cout << "send error"; error = 1; break; }
+                        if (!status) {
+                            cout << "send error";
+                            error = 1;
+                            break;
+                        }
 
                         message = przychodzace(client_socket);
-                        if( message == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        if (message == "-1") {
+                            cerr << "error przy odbieraniu danych";
+                            break;
+                        }
                         break;
                     case 5:
                         break;
@@ -296,10 +357,17 @@ int main() {
                     case 4:
                         message = "podaj nazwe pliku ktory chcesz pobrac";
                         status = wychodzace(client_socket, message);
-                        if(!status) { cout << "send error"; error = 1; break; }
+                        if (!status) {
+                            cout << "send error";
+                            error = 1;
+                            break;
+                        }
 
                         nazwa_pliku = przychodzace(client_socket);
-                        if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        if (folder == "-1") {
+                            cerr << "error przy odbieraniu danych";
+                            break;
+                        }
 
 
                         char bufor[1000];
@@ -309,21 +377,32 @@ int main() {
                             streamsize bytes_read = plik.gcount(); // liczba odczytanych bajtow
                             if (bytes_read > 0) {
                                 status = wychodzace(client_socket, bufor);
-                                if(!status) { cout << "send error"; error = 1; break; }
+                                if (!status) {
+                                    cout << "send error";
+                                    error = 1;
+                                    break;
+                                }
                             }
                             przychodzace(client_socket);
-                            if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                            if (folder == "-1") {
+                                cerr << "error przy odbieraniu danych";
+                                break;
+                            }
                         }
                         status = wychodzace(client_socket, "END"); // gdy sie skonczyl plik
                         przychodzace(client_socket);
-                        if( folder == "-1"){cerr << "error przy odbieraniu danych"; break;}
+                        if (folder == "-1") {
+                            cerr << "error przy odbieraniu danych";
+                            break;
+                        }
                         plik.close();
 
                 }
-                if(error){ break;}
+                if (error) { break; }
 
 
             }
+
             break;
         }
         closesocket(client_socket);

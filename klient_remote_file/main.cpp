@@ -3,6 +3,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <fstream>
+#include <functional>
+#include <sstream>
 
 using namespace std;
 
@@ -44,6 +46,17 @@ int wychodzace(SOCKET socket, string message){
     int send_bits; // ilość wysłanych bitów
     send_bits = send(socket, message.c_str(), message.length()+1, 0);
     return send_bits;
+}
+
+string hashowanie(string tekst){
+    hash<string> hasher;
+    size_t hash_value = hasher(tekst);
+    ostringstream oss;
+    oss << hash_value;
+    string hash_str = oss.str();
+    cout << "Hash of \"" << tekst << "\" is: " << hash_str << endl;
+
+    return hash_str;
 }
 
 int main() {
@@ -92,14 +105,14 @@ int main() {
         cin >> mes_to_send;
         status = wychodzace(gniazdo1, mes_to_send); // wysyłamy login
         if(!status) { cout << "send error"; break; }
+
         message = przychodzace(gniazdo1);
         cout << message << endl;
         if (message == ""){cout << "error po stornie servera"; break;}
         cin >> haslo;
-
-        // tutaj dorobić hashowanie hasła
-
-        status = wychodzace(gniazdo1, haslo); // wysyłamy haslo
+        // hashowanie
+        hash_haslo = hashowanie(haslo);
+        status = wychodzace(gniazdo1, hash_haslo); // wysyłamy haslo
         if(!status) { cout << "send error"; break; }
 
 
@@ -131,9 +144,33 @@ int main() {
          *  a tu na kliencie będzie to przedstawiane w postaci listy / później w postaci kafelek, albo wgl, obiektów wektor obiektów,
          *  gdzie każdy będzie miał tą swoją nazwę i rozmiar. i później te kafelki się będą wyświetlać.
          */
+
         while(1) {
             message = przychodzace(gniazdo1);
             cout << message;
+
+            if(message.substr(0, 4) == "root"){
+                while(1) {
+                    cin >> mes_to_send;
+                    status = wychodzace(gniazdo1, mes_to_send);
+                    if(mes_to_send == "0"){ break; }
+                    message = przychodzace(gniazdo1);
+                    cin >> mes_to_send;
+
+                    hash_haslo=hashowanie(mes_to_send);
+                    status = wychodzace(gniazdo1, hash_haslo);
+                    message = przychodzace(gniazdo1);
+                    cin >> mes_to_send;
+                    status = wychodzace(gniazdo1, mes_to_send);
+                    message = przychodzace(gniazdo1);
+                    cin >> mes_to_send;
+                    status = wychodzace(gniazdo1, mes_to_send);
+                    message = przychodzace(gniazdo1);
+                }
+                message = przychodzace(gniazdo1);
+                cout << message;
+            }
+
             cin >> mes_to_send;
             int wybor =stoi(mes_to_send);
             status = wychodzace(gniazdo1, mes_to_send);
