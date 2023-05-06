@@ -19,7 +19,7 @@ public:
     User(string login, string hash_pass, int acc_type = 0) : _login(login), _hashpassword(hash_pass), _is_logged(0), _count_login_try(0), _block(0), _account_type(acc_type){}
     int try_login(string login, string password){ // 1 - zalogowano; 2 - bledne haslo; 0 - nie ma loginu
         if(login==_login){
-            if(_count_login_try == 4) { _block=1; return 0;} // jesli 5 razy ktos probował to blokujemy
+            if(_count_login_try == 4) { _block=1; return -1;} // jesli 5 razy ktos probował to blokujemy
             if(strcmp(_hashpassword.c_str(), password.c_str()) == 0 ){
                 _is_logged = 1;
                 _count_login_try=0; // zerujemy proby
@@ -187,7 +187,8 @@ int main() {
                         zalogowany_user = user; // zapisujemy aktualnie zalogowanego
                         break;
                     }
-                    else{ // status loginu = 1,
+                    else{ // status loginu jest rozny od 1,czyli albo -1 albo 2 albo 0 // bledne haslo + ban, bledne haslo, nie ma loginu
+                        if (status_loginu == -1) { ban_IP.insert(clientIp); } // dodajemy aktualny adres IP do listy zablokowanych numerów IP, przy kolejnym połączeniu wywali go
                         break;
                     }
                 }
