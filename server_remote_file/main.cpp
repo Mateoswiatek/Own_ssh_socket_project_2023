@@ -71,8 +71,8 @@ int add_user(string login, string hash_pass, int acc_type = 0){ // dodawanie use
 
 string wypisz_zawartosc(){ // wyswietlamy zawartosc folderu
     string message = "";
-    filesystem::path folder_path = "./";
-    for (const auto& entry : filesystem::directory_iterator(folder_path))
+    //filesystem::path folder_path = "./";
+    for (const auto& entry : filesystem::directory_iterator("./"))
     {
         message.append(entry.path().filename().string());
         message.append("\n");
@@ -252,7 +252,7 @@ int main() {
                     break;
                 }
 
-                int wybor = stoi(przychodzace(client_socket));
+                int wybor = stoi(przychodzace(client_socket)); // tu przychodzi wybor usera
                 if (wybor == -1) {
                     cerr << "error przy odbieraniu danych";
                     break;
@@ -260,7 +260,7 @@ int main() {
 
                 cout << wybor;
 
-                string folder, nazwa_pliku;
+                string folder, nazwa_pliku, potwierdzenie;
 
                 bool error = 0;
                 switch (wybor) {
@@ -348,10 +348,8 @@ int main() {
                             break;
                         }
                         break;
-                    case 5:
-                        break;
 
-                    case 4:
+                    case 4:{
                         message = "podaj nazwe pliku ktory chcesz pobrac";
                         status = wychodzace(client_socket, message);
                         if (!status) {
@@ -361,17 +359,18 @@ int main() {
                         }
 
                         nazwa_pliku = przychodzace(client_socket);
-                        if (folder == "-1") {
+                        if (nazwa_pliku == "-1") {
                             cerr << "error przy odbieraniu danych";
                             break;
                         }
 
 
-                        char bufor[1000];
+                        char bufor[1024];
                         ifstream plik(nazwa_pliku);
                         while (plik) {
-                            plik.read(bufor, 1000);
+                            plik.read(bufor, 1023);
                             streamsize bytes_read = plik.gcount(); // liczba odczytanych bajtow
+                            bufor[bytes_read] = '\0'; // dopisuje na 1024 pozycji koniec wiadomości
                             if (bytes_read > 0) {
                                 status = wychodzace(client_socket, bufor);
                                 if (!status) {
@@ -380,20 +379,48 @@ int main() {
                                     break;
                                 }
                             }
-                            przychodzace(client_socket);
-                            if (folder == "-1") {
+                            potwierdzenie = przychodzace(client_socket);
+                            if (potwierdzenie == "-1") {
                                 cerr << "error przy odbieraniu danych";
                                 break;
                             }
                         }
                         status = wychodzace(client_socket, "END"); // gdy sie skonczyl plik
-                        przychodzace(client_socket);
-                        if (folder == "-1") {
+                        potwierdzenie = przychodzace(client_socket);
+                        if (potwierdzenie == "-1") {
                             cerr << "error przy odbieraniu danych";
                             break;
                         }
                         plik.close();
+                        break;}
+                    case 5:{
 
+                        status = wychodzace(client_socket, "Podaj nazwe pliku pod jaka ma byc zapisany wybrany plik");
+                        if (!status) { cout << "send error"; error = 1; break; }
+
+                        string nazwa_pliku;
+                        nazwa_pliku = przychodzace(client_socket);
+                        if (nazwa_pliku == "-1") { cerr << "error przy odbieraniu danych"; break; }
+
+                        status = wychodzace(client_socket, "1"); // okejka
+                        if (!status) { cout << "send error"; error = 1; break; }
+
+                        ofstream file(nazwa_pliku);
+
+                        while(1){ // dopoki sa jeszcze dane
+                            message = przychodzace(client_socket); // ze musimy nazwe pliku podac
+
+                            if(strcmp(message.c_str(), "END") == 0){
+                                break; // wychodzimy, po wyjsciu wysyłamy ponownie zestaw poleceń jakie może user wykonać
+                            }
+                            file.write(message.c_str(), message.size());
+
+                            status = wychodzace(client_socket, "1");
+                            if (!status) { cerr << "send error"; error=1;}
+                        }
+                        file.close();
+                        cout << "wyszlismy ez\n";
+                    }
                 }
                 // tu mozna by wyciągnąćniektóre rzeczy wspólne, ale wolę nie, abym nie musiał grzebać jakbym coś dodawał "nietypowego"
                 if (error) { break; } // jeśli jest błąd to wychodzimy z zalogowania

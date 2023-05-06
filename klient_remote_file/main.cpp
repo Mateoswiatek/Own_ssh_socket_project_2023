@@ -167,7 +167,7 @@ int main() {
 
 
         while(1) {
-            message = przychodzace(gniazdo1); // normalne komendy
+            message = przychodzace(gniazdo1); // normalne komendy, co może user zrobić
             cout << message;
 
             cin >> mes_to_send;
@@ -218,9 +218,9 @@ int main() {
 
                     break;
 
-                case 4:
+                case 4:{
 
-                    message = przychodzace(gniazdo1); // ze musimy nazwe pliku podac
+                    message = przychodzace(gniazdo1); // info od servera ze musimy nazwe pliku podac
                     cout << message << "\n";
 
                     cin >> mes_to_send;
@@ -228,25 +228,57 @@ int main() {
                     if (!status) { cerr << "send error"; error=1;}
                     ofstream file(mes_to_send);
 
-                    int x =0;
                     while(1){ // dopoki sa jeszcze dane
-                        x++;
                         message = przychodzace(gniazdo1); // ze musimy nazwe pliku podac
 
                         if(strcmp(message.c_str(), "END") == 0){
+                            status = wychodzace(gniazdo1, "1"); // okejka że jest wszystko okej
                             break;
                         }
-
                         file.write(message.c_str(), message.size());
 
-                        status = wychodzace(gniazdo1, "1"); // wysylamy nazwe pliku
+                        status = wychodzace(gniazdo1, "1"); // okejka
                         if (!status) { cerr << "send error"; error=1;}
-
                     }
                     file.close();
-                    cout << "wyszlismy" << endl;
-                    break;
+                    break;}
+                case 5: {
+                    string nazwa_pliku, potwierdzenie, plik_na_serverze;
+                    cout << "podaj nazwe pliku z twojego komputera\n";
+                    cin >> nazwa_pliku; // podajemy nazwe sciezki
 
+                    message = przychodzace(gniazdo1); // info od servera jaka nazwa pliku na serverze ma byc / sciezka
+                    cout << message << "\n";
+                    cin >> plik_na_serverze;
+                    status = wychodzace(gniazdo1, plik_na_serverze); // wysylamy nazwe pliku na server
+                    if (!status) { cout << "send error"; error = 1; break; }
+
+                    przychodzace(gniazdo1); // okejka
+
+                    char bufor[1024];
+                    ifstream plik(nazwa_pliku);
+                    while (plik) {
+                        plik.read(bufor, 1023);
+                        streamsize bytes_read = plik.gcount(); // liczba odczytanych bajtow
+                        bufor[bytes_read] = '\0'; // dopisuje na 1024 pozycji koniec wiadomości
+                        if (bytes_read > 0) {
+                            status = wychodzace(gniazdo1, bufor);
+                            if (!status) {
+                                cout << "send error";
+                                error = 1;
+                                break;
+                            }
+                        }
+                        potwierdzenie = przychodzace(gniazdo1);
+                        if (potwierdzenie == "-1") {
+                            cerr << "error przy odbieraniu danych";
+                            break;
+                        }
+                    }
+                    status = wychodzace(gniazdo1, "END"); // gdy sie skonczyl plik
+                    plik.close();
+                    break;
+                }
             }
             if(error){cout<<"blad wysylania danych";}
         }
