@@ -18,10 +18,8 @@ Oddzielne komunikaty zwrotne dla:
     - wyswietlenie zawartosci katalogu / folderu
     - przejście do folderu
     - stworzenie folderu
-    - JESZCZE NIE MA:
     - pobierz plik
     - wyslij plik
-    - stworzenie pliku
 
 ## Przyszła rozbudowa / ulepszenie
 Jeśli starczy czasu, chęci i życia to: 
