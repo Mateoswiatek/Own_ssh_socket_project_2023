@@ -130,8 +130,6 @@ int main() {
         return 1;
     }
 
-// wszystko powyzej można do funkcji ?
-
 // alternatywnie, można zrobić pole dozwolonych adresow ip i tylko za ich pomocą łączyć, ew jeśli jest nowy adres ip a dane sie zgadzaja, to trzeba potwierdzic mailem
 // ewentualnie całe podsiecie banowac i trzymac tylko poczatkowe wartosci
     set<string> ban_IP;
