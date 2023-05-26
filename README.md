@@ -37,6 +37,7 @@ If there is enough time, desire and life then:
 - [ ] Modification of the way logins and passwords are retrieved - reading from a file this entails:
 - [ ] Adding users / restricting certain options depending on the user. 
 - [ ] Adding a log file of what is happening on the server + an independent program which periodically makes a copy of this file to a completely different location (in case of an attack and removal of traces from this file).
+- [ ] add a field with the time since the last login attempt. allow further logins depending on the time since the last attempt and the number of failed logins. e.g. 2 invalid logins - login after 5 minutes, 3 logins 15 minutes, 5 logins 2 hours
 - [ ] Replacing the hash with asymmetric keys
 - [ ] Adding "some" security
 - [ ] Adding to the field
