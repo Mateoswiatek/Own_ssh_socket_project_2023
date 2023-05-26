@@ -1,5 +1,5 @@
 # Project for the subject fundamentals of programming (Cpp)
-Computer Science and Intelligent Systems 1 year 2 semester. 
+AGH Computer Science and Intelligent Systems 1 year 2 semester. 
 
 ## Description
 Software providing 'not very secure' remote access to a computer. The project includes files for the client and the server.
