@@ -1,7 +1,49 @@
-# Zdalny dostęp do komputera
+# Project for the subject fundamentals of programming (Cpp)
+Computer Science and Intelligent Systems 1 year 2 semester. 
 
+## Description
+Software providing 'not very secure' remote access to a computer. The project includes files for the client and the server.
+The server is in standby mode, 1 person at a time can have access. Logging in is done by entering the appropriate Login Password pair. It will be possible to perform several operations on the remote computer. The programme is written for a friendly user. It does not have many security features. 
+Jpg files show how the programme works
+
+## Functionality / options
+- [ ] Direct server login, password hashed
+Separate feedback messages for:
+    - non-existent login
+    - wrong password
+    - correct login
+- [ ] Limitation of password attempts to a preset number. If exceeded, no login is possible. Server shuts down, a restart of the program / server is necessary to return.
+- [ ] Display of "menu"
+
+    - display the contents of a directory/folder
+    - move to folder
+    - create folder
+    - download file
+    - send file
+
+## Future expansion/improvement
+If there is enough time, desire and life then: 
+- [ ] Clearing the code of unnecessary test lines and overly extensive comments.
+- [x] Replacing information handling with switch/cashes
+- [x] Adding a Password Hashing Function (at least a bit more security).
+
+- [x] Adding functions to the menu, for example:
+    - copy the specified file,
+    - uploading the specified file,
+    - displaying files in a 'shared' directory
+    - Adding security against deletion of existing files ( cybersecurity )
+    - (file deletion)
+- [ ] Addition of a simple graphical interface on the client side
+- [ ] Modification of the way logins and passwords are retrieved - reading from a file this entails:
+- [ ] Adding users / restricting certain options depending on the user. 
+- [ ] Adding a log file of what is happening on the server + an independent program which periodically makes a copy of this file to a completely different location (in case of an attack and removal of traces from this file).
+- [ ] Replacing the hash with asymmetric keys
+- [ ] Adding "some" security
+- [ ] Adding to the field
+- [ ] Transferring ideas from the code here to the README
+
+# PL:
 ## Opis
-
 Oprogramowanie zapewniające "niezbyt bezpieczny" zdalny dostęp do komputera. Projekt zawiera pliki dla klienta oraz servera.
 Server jest w stanie czuwania, 1 osoba jednocześnie może mieć dostęp. Logowanie odbywa się poprzez podanie odpowiedniej pary Login Hasło. Możliwe będzie wykonanie kilku operacji na zdalnym komputerze. Program jest pisany pod przyjaznego użytkownika. Nie posiada wielu zabezpieczeń. 
 
